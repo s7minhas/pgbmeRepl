@@ -41,7 +41,7 @@ mcmc <- function(t, year=pds) {
 		Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
 		k = 2, rho.calc = FALSE,
 		# NS = 3e+5, burn = 1.5e+5, odens = 100
-		NS = 10, burn = 1, odens = 1,
+		NS = 1e+5, burn = 5e+4, odens = 10,
 		seed=6886
 		)
 	save(est, file=paste0('results',year[t],'.rda'))
@@ -175,7 +175,7 @@ ggHorizUSA = ggplot(predDF, aes(x=cntry, color=factor(actBIT))) +
     panel.border=element_blank(),
     axis.text.x=element_blank(),
     legend.position='bottom',
-    legend.title=element_blank(),
+    legend.title=element_blank()
     )
 
 ggVertUSA = ggHorizUSA + 
