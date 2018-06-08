@@ -1,45 +1,39 @@
 # workspace ###############################
+setwd('~/Research/pgbmeRepl/main')
 rm(list=ls())
-if(Sys.info()['user'] %in% c('s7m', 'janus829')){
-	source('~/Dropbox/Research/BiProbPO/PartialNet/functions/setup.R') }
+library(tidyr)
+library(reshape2)
+library(sbgcop)
+library(doParallel)
+library(foreach)
 
-# libs
-libs = c('tidyr','reshape2','sbgcop','ggplot2','doParallel','foreach') ; loadPkg(libs)
+# helpers
+char = function(x){as.character(x)}
+num = function(x){as.numeric(char(x))}
+cntr <- function(x) (x - mean(c(x), na.rm = TRUE))/sd(c(x), na.rm = TRUE)
+trim = function (x) { gsub("^\\s+|\\s+$", "", x) }
 ################################
 
 # load data files and assemble for imp ###############################
-load(paste0(dataPath, 'rawData.rda')) # bit.acc.t, covData, dist.norm
+load('rawData.rda') # bit.acc.t, covData, dist.norm
 
 # only covData needs to be imputed
 covDataL = do.call('rbind', covData)
 forSbg = covDataL[,-c(1:3)]
 sbgMod = sbgcop.mcmc(forSbg, nsamp=1000, odens=1, seed=6886)
 
-# convergence check
-corCheck = sbgMod$C.psamp
-for(i in 1:dim(corCheck)[3]){ diag(corCheck[,,i])=NA ; sbgMod$C.psamp[,,i][upper.tri(corCheck[,,i])] = NA  }
-corMatChain = melt(corCheck) ; corMatChain = na.omit(corMatChain)
-corMatChain$id = paste(corMatChain$Var1, corMatChain$Var2, sep='_')
-sbgConv = ggplot(corMatChain, aes(x=Var3, y=value)) +
-	geom_line() + ylab('') + xlab('') + 
-	facet_wrap(~id, scales='free_y') + 
-	theme(
-		axis.ticks=element_blank(), 
-		axis.text = element_text(size=5),
-		strip.text = element_text(size=6)
-		)
-ggsave(paste0(graphicsPath, 'sbgConv.pdf'), sbgConv, device='pdf', width=10, height=10)
-
-# pull out imp datasets (burn first 500)
-sbgImps = lapply(500:dim(sbgMod$Y.impute)[3], function(i){
+# pull out a few imp datasets
+set.seed(6886)
+impIters = sample(501:1000, 6)
+sbgImps = lapply(impIters, function(i){
 	x = sbgMod$Y.impute[,,i] ; colnames(x) = colnames(sbgMod$Y.pmean)
 	return( data.frame(covDataL[,1:3], x, row.names=NULL) ) })
 sbgImps[[1]] = data.frame(covDataL[,1:3], sbgMod$Y.pmean,row.names=NULL)
 ################################
 
 # design structs ###############################
-cl=makeCluster(6) ; registerDoParallel(cl)
-foreach(t = names(bit.acc.t)) %dopar% {
+cl=makeCluster(2) ; registerDoParallel(cl)
+shhh <- foreach(t = c('1995','2010')) %dopar% {
 
 	# iterate over every imp
 	xData = lapply(sbgImps, function(x){
@@ -67,7 +61,7 @@ foreach(t = names(bit.acc.t)) %dopar% {
 
 	# save
 	save(bit.acc.t, xData, 
-		file=paste0(dataPath, 'modelData',t,'.rda'))
+		file=paste0('modelData',t,'.rda'))
 }
 stopCluster(cl)
 ################################

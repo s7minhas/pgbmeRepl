@@ -359,29 +359,6 @@ pgbme <-function(
 
 # End of MCMC: below are helper functions
 
-# calculate y hat from pgbme output
-calc_yhat <- function(m, xInclImpList=FALSE){
-  # Dyadic coefficients:
-  b <- m$est[,grep("bd", colnames(m$est))]
-  # Empty zero matrix
-  E <- matrix(0, nrow = nrow(m$Xd), ncol = nrow(m$Xd))  
-  # Calculate predictions and collapse
-  if(!xInclImpList){
-    y_calc <- sapply(1:nrow(b), function(i){
-      c(theta.betaX.d.srE.ef(
-        b[i, ], m$Xd, m$s[i, ], m$r[i, ], E*0, 
-        m$e[, , i], m$f[, , i]
-        )) })
-  } else {
-    y_calc <- sapply(1:nrow(b), function(i){
-      c(theta.betaX.d.srE.ef(
-        b[i, ], m$Xd_L[[ m$xdId[i] ]], m$s[i, ], m$r[i, ], E*0, 
-        m$e[, , i], m$f[, , i]
-        )) })    
-  }
-  return(y_calc)
-}
-
 # SAMPLE Y from posterior predictive distribtuion
 pred.y <- function(theta, rho, se, fam="gaussian"){
   e <- rmnorm(n*(n-1)/2, varcov = se*covmat(rho))
@@ -645,3 +622,73 @@ for (t in sample(1:2, 2)){
 
 fisher <- function(rho) .5*log((1+rho)/(1-rho))
 fisher.inv <- function(z) (exp(2*z) - 1)/(exp(2*z) + 1)
+
+# calculate y hat from pgbme output
+calc_yhat <- function(m, xInclImpList=FALSE){
+  # Dyadic coefficients:
+  b <- m$est[,grep("bd", colnames(m$est))]
+  # Empty zero matrix
+  E <- matrix(0, nrow = nrow(m$Xd), ncol = nrow(m$Xd))  
+  # Calculate predictions and collapse
+  if(!xInclImpList){
+    y_calc <- sapply(1:nrow(b), function(i){
+      c(theta.betaX.d.srE.ef(
+        b[i, ], m$Xd, m$s[i, ], m$r[i, ], E*0, 
+        m$e[, , i], m$f[, , i]
+        )) })
+  } else {
+    y_calc <- sapply(1:nrow(b), function(i){
+      c(theta.betaX.d.srE.ef(
+        b[i, ], m$Xd_L[[ m$xdId[i] ]], m$s[i, ], m$r[i, ], E*0, 
+        m$e[, , i], m$f[, , i]
+        )) })    
+  }
+  return(y_calc)
+}
+
+# Predicted network probabilities of ntw ties 
+predict.gbme <- function(yhat, y, directional = TRUE, threshold = NULL){
+  yhat <- apply(pnorm(yhat), 1, mean)
+  yhat <- matrix(yhat, sqrt(length(yhat)), sqrt(length(yhat)))
+  colnames(yhat) <- rownames(yhat) <- rownames(y)
+  diag(yhat) <- 0
+
+if (!is.null(threshold)){
+if (threshold == "optimal"){
+  yobs    <- apply(mat.vect(y), 1, prod)
+  cat("Calculating optimal threshold", "\n")
+  opthres <- function(t){
+    yhat <- mat.vect(yhat) 
+    yhat <- 1*(yhat > t)
+    yhat <- apply(yhat, 1, prod)
+    - (sensitivity(as.factor(yhat), as.factor(yobs)) + specificity(as.factor(yhat), as.factor(yobs)))
+  }
+}
+  
+  threshold <- optim(0.5, opthres, method = "L-BFGS-B", lower = 0.01, upper = 0.99)$par
+  cat(round(threshold, 2), "\n")
+}
+  
+if (directional){
+  if (!is.null(threshold)) yhat <- 1*(yhat > threshold)
+    return(list(yhat = yhat, y = y))
+}
+
+if (!directional){
+  
+  if (!is.null(threshold)){
+    yhat <- mat.vect(yhat) 
+    yhat <- 1*(yhat > threshold)
+    yhat <- apply(yhat, 1, prod)
+  }
+  
+  if (is.null(threshold)){
+    yhat <- mat.vect(yhat)
+    yhat <- apply(yhat, 1, prod)
+    yhat <- vect.mat(cbind(yhat, yhat))
+    colnames(yhat) <- rownames(yhat) <- rownames(y)
+  }
+
+  return(list(yhat = yhat, y = y))
+  }
+}
