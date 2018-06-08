@@ -30,15 +30,15 @@ mcmc <- function(t, year=pds) {
 	y <- apply(mat.vect(y), 1, prod)
 	xDyadStart = xData[[1]]$xDyad
 	xNodeStart = xData[[1]]$xNode
-	impsToDraw = 2:6
-	xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
-	xNode = lapply(xData[impsToDraw], function(x){x$xNode})
+	# impsToDraw = 2:length(xData)
+	# xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
+	# xNode = lapply(xData[impsToDraw], function(x){x$xNode})
 	rm(xData)
 
 	est <- pgbme(
 		y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
-		xInclImpList=TRUE, 
-		Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
+		xInclImpList=FALSE, 
+		# Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
 		k = 2, rho.calc = FALSE,
 		# NS = 3e+5, burn = 1.5e+5, odens = 100
 		NS = 1e+5, burn = 5e+4, odens = 10,

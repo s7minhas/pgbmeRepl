@@ -186,7 +186,7 @@ pgbme <-function(
     paste("s2f", 1:k,sep="")
   )
   
-  yhat   <- matrix(NA, ncol = (NS-burn)/odens, nrow = n^2)
+  # yhat   <- matrix(NA, ncol = (NS-burn)/odens, nrow = n^2)
   mcmc.samp <- matrix(NA, nrow = (NS-burn)/odens, ncol = length(cnames))
   mcmc.e <- array(NA, dim = c(n, k, (NS-burn)/odens))
   mcmc.f <- array(NA, dim = c(n, k, (NS-burn)/odens))
@@ -322,7 +322,7 @@ pgbme <-function(
       out <- c(lpy.th, beta.d, beta.u, 
         Sab[1,1], Sab[1,2], Sab[2,2], se, rho, s2e[0:k], s2f[0:k])
       
-      yhat[, nst] <- c(theta - E)
+      # yhat[, nst] <- c(theta - E)
       mcmc.samp[nst, ] <- t(out)
       mcmc.e[, , nst] <- e
       mcmc.f[, , nst] <- f
@@ -352,7 +352,9 @@ pgbme <-function(
   colnames(mcmc.samp) <- cnames
   mcmc.samp <- list(
     est = mcmc.samp, Xd = Xd, s = mcmc.s, r = mcmc.r, 
-    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd, yhat=yhat)
+    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd
+    # , yhat=yhat
+    )
   class(mcmc.samp) <- "gbme"
   return(mcmc.samp)
 } 
