@@ -7,6 +7,10 @@
 #Xd : an n*n*rd array representing dyad-specific predictors
 #Xs : an n*rs matrix of sender-specific predictors
 #Xr : an n*rr matrix of receiver-specific predictors
+#xMiss: 
+#Xd_L : a list of n*n*rd arrays representing dyad-specific predictors
+#Xs_L : a list of n*rs matrices of sender-specific predictors
+#Xr_L : a list of  n*rr matrices of receiver-specific predictors
 
 # fam : "gaussian" "binomial", or "poisson"
 # if fam="binomial" then an (n*n) matrix N of trials is needed
@@ -55,7 +59,11 @@ pgbme <-function(
   #Details of output
   NS = 100,         #number of scans of mcmc to run
   odens = 1,         #output density
-  seed = 1
+  seed = 1,
+  xMiss = FALSE,
+  Xd_L = NULL,
+  Xs_L = NULL,
+  Xr_L = NULL
 )
 {
 
@@ -70,29 +78,47 @@ pgbme <-function(
   rr <<- dim(Xr)[2]   
   
   # Design matrix for unit-specific predictors
-  X.u <- cbind(rep(.5, 2*n), adiag(Xs,Xr))
+  if(!xMiss){
+    X.u <- cbind(rep(.5, 2*n), adiag(Xs,Xr))
+  } else {
+    X.u_L = lapply(1:length(Xs_L), function(i){
+      cbind(rep(.5,2*n), adiag(Xs_L[[i]], Xr_L[[i]]))  })
+    rm(list=c('Xs_L','Xr_L'))
+  }
   
   # Construct an upper triangular matrix (useful for later computations)
   tmp<-matrix(1,n,n)
   tmp[lower.tri(tmp,diag=T)]<-NA 
   UT<<-tmp
   
+  # get starting values
   if (is.null(startv)){
     Xdyad <- apply(Xd, 3, function(x) c(mat.vect(x)))
     s <- rep(1:n, n-1)
     r <- rep(1:n, each=n-1)
     cat("Using MLE to calculate starting values", '\n')
     options(warn=-1)
-    mle  <- glmer(c(mat.vect(Y)) ~ Xdyad + Xs[rep(1:n, n-1), ] + Xr[rep(1:n, each = n-1), ] + (1|s) + (1|r), family=binomial(link=probit))
+    mle  <- glmer(c(mat.vect(Y)) ~ Xdyad + Xs[s, ] + Xr[r, ] + (1|s) + (1|r), 
+      family=binomial(link=probit),
+      control=glmerControl( optimizer = "nloptwrap" ) )
     startv$beta.d <- fixef(mle)[grepl("Xdyad", names(fixef(mle)))]
-    startv$beta.u <- c(fixef(mle)[1], fixef(mle)[grepl("Xs", names(fixef(mle)))], fixef(mle)[grepl("Xr", names(fixef(mle)))])
+    startv$beta.u <- c(
+      fixef(mle)[1], fixef(mle)[grepl("Xs", names(fixef(mle)))], 
+      fixef(mle)[grepl("Xr", names(fixef(mle)))])
     startv$s <- ranef(mle)$s[,1]
     startv$r <- ranef(mle)$r[,1]
     startv$z <- matrix(0, n, max(k,1))
   }
   
+  # org results
+  beta.d<-startv$beta.d ; beta.u<-startv$beta.u 
+  s<-startv$s ; r<-startv$r ; z<-startv$z;
+  rm(list=c('X','mle','startv'))
+  e <- z; f <- z;
+  su <- sv <- pi.s2u[2]
+  rho <- 0; se <-1;
 
-  
+  # set priors
   if (is.null(priors)){
     pi.Sab <- c(1, 0, 1, 4) # inv-wishart
     pi.s2u <- c(1, 1) # inv-gamma: appriori mean approx 1  
@@ -103,12 +129,6 @@ pgbme <-function(
     pim.b0sr <- rep(0, 1 + rs + rr) 
     piS.b0sr <- 10*diag(1 + rs + rr) 
   }
-  
-  beta.d<-startv$beta.d ; beta.u<-startv$beta.u 
-  s<-startv$s ; r<-startv$r ; z<-startv$z;
-  e <- z; f <- z;
-  su <- sv <- pi.s2u[2]
-  rho <- 0; se <-1;
 
   ###Matrices for ANOVA  on Xd, s, r
   tmp<-TuTv(ncol(Y))   #unit level effects design matrix for u=yij+yji, v=yij-yji
@@ -116,15 +136,31 @@ pgbme <-function(
   Tv<-tmp$Tv
   
   #regression design matrix for u=yij+yji, v=yij-yji
-  tmp<-XuXv(Xd)   
-  Xu<-tmp$Xu  
-  Xv<-tmp$Xv
-  
-  XTu<<-cbind(Xu,Tu)
-  XTv<<-cbind(Xv,Tv)
-  
-  tXTuXTu<<-t(XTu)%*%XTu
-  tXTvXTv<<-t(XTv)%*%XTv
+  if(!xMiss){
+    tmp<-XuXv(Xd)   
+    Xu<-tmp$Xu  
+    Xv<-tmp$Xv
+    rm(list=c('Xu','Xv','tmp'))    
+    
+    XTu<<-cbind(Xu,Tu)
+    XTv<<-cbind(Xv,Tv)
+    
+    tXTuXTu<<-t(XTu)%*%XTu
+    tXTvXTv<<-t(XTv)%*%XTv
+  } else {
+    tmp <- list()
+    for(ii in 1:length(Xd_L)){
+      tmp[[ii]] <- XuXv(Xd_L[[ii]]) }
+    Xu_L <- lapply(tmp, function(x){x$Xu})
+    Xv_L <- lapply(tmp, function(x){x$Xv})
+    rm(list=c('Xu_L','Xv_L','tmp'))        
+    
+    XTu_L <- lapply(Xu_L, function(x){cbind(x,Tu)})
+    XTv_L <- lapply(Xv_L, function(x){cbind(x,Tv)})
+
+    tXTuXTu_L <- lapply(XTu_L, function(x){ t(x)%*%x })
+    tXTvXTv_L <- lapply(XTv_L, function(x){ t(x)%*%x })    
+  }
   
   ###redefining hyperparams
   Sab0<-matrix( c(pi.Sab[1],pi.Sab[2],pi.Sab[2],pi.Sab[3]),nrow=2,ncol=2) 
@@ -141,13 +177,13 @@ pgbme <-function(
   theta.u <- mat.vect(theta)[,2]
   
   #column names for output file
-  cnames <- c("ll", 
-              paste("bd", 1:rd, sep="-"), "Intercept", 
-              paste("bs", 1:rs, sep=""), 
-              paste("br", 1:rr, sep=""), 
-              "s2a","sab","s2b","se2","rho",
-              paste("s2e", 1:k,sep=""),
-              paste("s2f", 1:k,sep="")
+  cnames <- c("ll",
+    paste("bd", 1:rd, sep="-"), "Intercept", 
+    paste("bs", 1:rs, sep=""), 
+    paste("br", 1:rr, sep=""), 
+    "s2a","sab","s2b","se2","rho",
+    paste("s2e", 1:k,sep=""),
+    paste("s2f", 1:k,sep="")
   )
   
   mcmc.samp <- matrix(NA, nrow = (NS-burn)/odens, ncol = length(cnames))
@@ -155,6 +191,7 @@ pgbme <-function(
   mcmc.f <- array(NA, dim = c(n, k, (NS-burn)/odens))
   mcmc.s <- matrix(NA, nrow = (NS-burn)/odens, ncol = n)
   mcmc.r <- matrix(NA,  nrow = (NS-burn)/odens, ncol = n)
+  mcmc.xd <- rep(NA, (NS-burn)/odens)
   nst  <- 1
   
   main.time <- proc.time()
@@ -163,6 +200,21 @@ pgbme <-function(
 
   for(ns in 1:NS){  
   
+    if(xMiss){
+      ## sample from posterior of imputed data
+      samp <- sample(1:length(X.u_L), 1)
+      
+      # dyadic and unit level data
+      Xd <- Xd_L[[samp]]
+      X.u <- X.u_L[[samp]]
+
+      # pre calc'd reg design arrays
+      XTu<<-XTu_L[[samp]]
+      XTv<<-XTv_L[[samp]]
+      tXTuXTu<<-tXTuXTu_L[[samp]]
+      tXTvXTv<<-tXTvXTv_L[[samp]]
+    }
+
     ###impute any missing values 
     if(any(is.na(Y))) {  
       mu<-theta.betaX.d.srE.ef(beta.d,Xd,s,r,E*0,e,f) #predicted means
@@ -171,9 +223,11 @@ pgbme <-function(
       t = which(is.na(theta.new[,1]) & is.na(theta.new[,2]))
       theta.new[t,] = rmnorm(length(t), c(0, 0), matrix(se*c(1,rho,rho,1),2,2)) + mu.new[t,]
       t=which(is.na(theta.new[,1]))
-      theta.new[t,1] = rnorm(length(t), mu.new[t,1] + rho*(mu.new[t,2] - theta.new[t,2]), sqrt(se*(1-rho^2)))
+      theta.new[t,1] = rnorm(
+        length(t), mu.new[t,1] + rho*(mu.new[t,2] - theta.new[t,2]), sqrt(se*(1-rho^2)))
       t=which(is.na(theta.new[,2]))
-      theta.new[t,2] = rnorm(length(t), mu.new[t,2] + rho*(mu.new[t,1] - theta.new[t,1]), sqrt(se*(1-rho^2)))
+      theta.new[t,2] = rnorm(
+        length(t), mu.new[t,2] + rho*(mu.new[t,1] - theta.new[t,1]), sqrt(se*(1-rho^2)))
       theta.new = vect.mat(theta.new)
       diag(theta.new) = diag(theta)
       theta = theta.new
@@ -243,7 +297,9 @@ pgbme <-function(
         alp.j<-cbind( f[-i,],e[-i,] )
         gam.j<-cbind( f[-i,],-e[-i,])
         
-        Sef<-chol2inv(chol(diag(1/c(s2e,s2f),nrow=2*k) + t(alp.j)%*%alp.j/s2u.res + t(gam.j)%*%gam.j/s2v.res ))
+        Sef<-chol2inv(
+          chol(
+            diag(1/c(s2e,s2f),nrow=2*k) + t(alp.j)%*%alp.j/s2u.res + t(gam.j)%*%gam.j/s2v.res ))
         
         muef<-Sef%*%( t(alp.j)%*%u.res/s2u.res + t(gam.j)%*%v.res/s2v.res )
         ef<-t(rmvnorm(muef,Sef))
@@ -262,19 +318,23 @@ pgbme <-function(
       v <- tmp$v                  #v=yij-yji,  i<j
       lpy.th <- sum(dnorm(u,0,sqrt(su),log=T) + dnorm(v,0,sqrt(sv),log=T))
       
-      out <- c(lpy.th, beta.d, beta.u, Sab[1,1], Sab[1,2], Sab[2,2], se, rho, s2e[0:k], s2f[0:k])
+      out <- c(lpy.th, beta.d, beta.u, 
+        Sab[1,1], Sab[1,2], Sab[2,2], se, rho, s2e[0:k], s2f[0:k])
       
       mcmc.samp[nst, ] <- t(out)
       mcmc.e[, , nst] <- e
       mcmc.f[, , nst] <- f
       mcmc.s[nst, ] <- s
       mcmc.r[nst, ] <- r
+      mcmc.xd[nst] <- samp
       nst         <- nst + 1
   
     } # end of output function
     
     if (ns==1){
-      cat(paste("MCMC sampling. Estimated time ", format(.POSIXct(NS*(proc.time() - main.time)[3],tz="GMT"), "%H:%M:%S"), sep = ""), '\n')
+      cat(paste("MCMC sampling. Estimated time ", 
+        format(.POSIXct(
+          NS*(proc.time() - main.time)[3],tz="GMT"), "%H:%M:%S"), sep = ""), '\n')
       cat("Progress: ", "\n")
     }
     
@@ -284,15 +344,41 @@ pgbme <-function(
   } ## end of MCMC function
   
   cat("\n")
-  cat("Time elapsed: ", format(.POSIXct((proc.time() - main.time)[3],tz="GMT"), "%H:%M:%S"), sep = " ", "\n")
+  cat("Time elapsed: ", format(.POSIXct((
+    proc.time() - main.time)[3],tz="GMT"), "%H:%M:%S"), sep = " ", "\n")
   #out <- read.table(paste(out.name, "theta", sep ="/"), header = TRUE)
   colnames(mcmc.samp) <- cnames
-  mcmc.samp <- list(est = mcmc.samp, Xd = Xd, s = mcmc.s, r = mcmc.r, e = mcmc.e, f = mcmc.f)
+  mcmc.samp <- list(
+    est = mcmc.samp, Xd = Xd, s = mcmc.s, r = mcmc.r, 
+    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd)
   class(mcmc.samp) <- "gbme"
   return(mcmc.samp)
 } 
 
 # End of MCMC: below are helper functions
+
+# calculate y hat from pgbme output
+calc_yhat <- function(m, xMiss=FALSE){
+  # Dyadic coefficients:
+  b <- m$est[,grep("bd", colnames(m$est))]
+  # Empty zero matrix
+  E <- matrix(0, nrow = nrow(m$Xd), ncol = nrow(m$Xd))  
+  # Calculate predictions and collapse
+  if(!xMiss){
+    y_calc <- sapply(1:nrow(b), function(i){
+      c(theta.betaX.d.srE.ef(
+        b[i, ], m$Xd, m$s[i, ], m$r[i, ], E*0, 
+        m$e[, , i], m$f[, , i]
+        )) })
+  } else {
+    y_calc <- sapply(1:nrow(b), function(i){
+      c(theta.betaX.d.srE.ef(
+        b[i, ], m$Xd_L[[ m$xdId[i] ]], m$s[i, ], m$r[i, ], E*0, 
+        m$e[, , i], m$f[, , i]
+        )) })    
+  }
+  return(y_calc)
+}
 
 # SAMPLE Y from posterior predictive distribtuion
 pred.y <- function(theta, rho, se, fam="gaussian"){
@@ -512,7 +598,9 @@ update.Y <- function(y, Y, m, rho, theta){
   sampY <- function(t){
     Y[y==0 & Y[, 3-t] == 1, t] <- 0
     w <- which(y==0 & Y[, 3-t] == 0)
-    Y[w, t] <- rbinom(length(w), 1, pnorm(m[w, t] + rho*(z[w, 3-t] - m[w, 3-t]), sd = sqrt(1-rho^2)))
+    Y[w, t] <- rbinom(
+      length(w), 1, 
+      pnorm(m[w, t] + rho*(z[w, 3-t] - m[w, 3-t]), sd = sqrt(1-rho^2)))
     Y[  ,t]
   }
   
@@ -533,12 +621,20 @@ update.Z <- function(y, mu, rho, Z){
  
 for (t in sample(1:2, 2)){
     w  <- which(y == 1)
-    Z[w, t] <- rtnorm(length(w), mu[w, t] + rho*(Z[w, 3-t] - mu[w, 3-t]), sd = sd, lower = 0)
-    Z[w, 3-t] <- rtnorm(length(w), mu[w, 3-t] + rho*(Z[w, t] - mu[w, t]), sd = sd, lower = 0)
+    Z[w, t] <- rtnorm(
+      length(w), mu[w, t] + rho*(Z[w, 3-t] - mu[w, 3-t]), 
+      sd = sd, lower = 0)
+    Z[w, 3-t] <- rtnorm(
+      length(w), mu[w, 3-t] + rho*(Z[w, t] - mu[w, t]), 
+      sd = sd, lower = 0)
     
     w  <- which(y == 0)
-    Z[w, t] <- rtnorm(length(w), mu[w, t] + rho*(Z[w, 3-t] - mu[w, 3-t]), sd = sd, upper = tau[(Z[w, 3-t] < 0) + 2])
-    Z[w, 3-t] <- rtnorm(length(w), mu[w, 3-t] + rho*(Z[w, t] - mu[w, t]), sd = sd, upper = tau[(Z[w, t] < 0) + 2])
+    Z[w, t] <- rtnorm(
+      length(w), mu[w, t] + rho*(Z[w, 3-t] - mu[w, 3-t]), 
+      sd = sd, upper = tau[(Z[w, 3-t] < 0) + 2])
+    Z[w, 3-t] <- rtnorm(
+      length(w), mu[w, 3-t] + rho*(Z[w, t] - mu[w, t]), 
+      sd = sd, upper = tau[(Z[w, t] < 0) + 2])
   }
   
   vect.mat(Z)
