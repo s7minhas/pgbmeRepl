@@ -1,20 +1,20 @@
-###Preconditions of the main function "gbme"
+###Preconditions of the main function "pgbme"
+### Code based off an extension of the "gbme" function:
+### "Bilinear Mixed-Effects Models for Dyadic Data" (Hoff 2003)
 
 ##objects with no defaults
+## note that only non-weighted edge estimation is supported
 #Y : a square matrix (n*n)
 
 ##objects with defaults
 #Xd : an n*n*rd array representing dyad-specific predictors
 #Xs : an n*rs matrix of sender-specific predictors
 #Xr : an n*rr matrix of receiver-specific predictors
-#xMiss: 
+#xInclImpList : logical indicating use of imputed covariates list
 #Xd_L : a list of n*n*rd arrays representing dyad-specific predictors
 #Xs_L : a list of n*rs matrices of sender-specific predictors
 #Xr_L : a list of  n*rr matrices of receiver-specific predictors
 
-# fam : "gaussian" "binomial", or "poisson"
-# if fam="binomial" then an (n*n) matrix N of trials is needed
-#
 # pi.Sab = (s2a0,sab0,s2b0,v0) : parameters of inverse wishart dist
 # pi.s2u = vector of length 2: parameters of an inv-gamma distribution
 # pi.s2v = vector of length 2: parameters of an inv-gamma distribution
@@ -60,7 +60,7 @@ pgbme <-function(
   NS = 100,         #number of scans of mcmc to run
   odens = 1,         #output density
   seed = 1,
-  xMiss = FALSE,
+  xInclImpList = FALSE,
   Xd_L = NULL,
   Xs_L = NULL,
   Xr_L = NULL
@@ -78,7 +78,7 @@ pgbme <-function(
   rr <<- dim(Xr)[2]   
   
   # Design matrix for unit-specific predictors
-  if(!xMiss){
+  if(!xInclImpList){
     X.u <- cbind(rep(.5, 2*n), adiag(Xs,Xr))
   } else {
     X.u_L = lapply(1:length(Xs_L), function(i){
@@ -90,6 +90,18 @@ pgbme <-function(
   tmp<-matrix(1,n,n)
   tmp[lower.tri(tmp,diag=T)]<-NA 
   UT<<-tmp
+
+  # set priors
+  if (is.null(priors)){
+    pi.Sab <- c(1, 0, 1, 4) # inv-wishart
+    pi.s2u <- c(1, 1) # inv-gamma: appriori mean approx 1  
+    pi.s2v <- c(1, 1) # inv-gamma: appriori mean approx 1
+    pi.s2z <- matrix(c(1, 1), max(k, 1), 2, byrow=TRUE) # inv-gamma for z's
+    pim.bd <- rep(0, rd) 
+    piS.bd <- 10*diag(rd)
+    pim.b0sr <- rep(0, 1 + rs + rr) 
+    piS.b0sr <- 10*diag(1 + rs + rr) 
+  }
   
   # get starting values
   if (is.null(startv)){
@@ -118,48 +130,36 @@ pgbme <-function(
   su <- sv <- pi.s2u[2]
   rho <- 0; se <-1;
 
-  # set priors
-  if (is.null(priors)){
-    pi.Sab <- c(1, 0, 1, 4) # inv-wishart
-    pi.s2u <- c(1, 1) # inv-gamma: appriori mean approx 1  
-    pi.s2v <- c(1, 1) # inv-gamma: appriori mean approx 1
-    pi.s2z <- matrix(c(1, 1), max(k, 1), 2, byrow=TRUE) # inv-gamma for z's
-    pim.bd <- rep(0, rd) 
-    piS.bd <- 10*diag(rd)
-    pim.b0sr <- rep(0, 1 + rs + rr) 
-    piS.b0sr <- 10*diag(1 + rs + rr) 
-  }
-
   ###Matrices for ANOVA  on Xd, s, r
   tmp<-TuTv(ncol(Y))   #unit level effects design matrix for u=yij+yji, v=yij-yji
   Tu<-tmp$Tu
   Tv<-tmp$Tv
   
   #regression design matrix for u=yij+yji, v=yij-yji
-  if(!xMiss){
+  if(!xInclImpList){
     tmp<-XuXv(Xd)   
     Xu<-tmp$Xu  
     Xv<-tmp$Xv
-    rm(list=c('Xu','Xv','tmp'))    
     
     XTu<<-cbind(Xu,Tu)
     XTv<<-cbind(Xv,Tv)
     
     tXTuXTu<<-t(XTu)%*%XTu
     tXTvXTv<<-t(XTv)%*%XTv
+    rm(list=c('Xu','Xv','tmp'))
   } else {
     tmp <- list()
     for(ii in 1:length(Xd_L)){
       tmp[[ii]] <- XuXv(Xd_L[[ii]]) }
     Xu_L <- lapply(tmp, function(x){x$Xu})
     Xv_L <- lapply(tmp, function(x){x$Xv})
-    rm(list=c('Xu_L','Xv_L','tmp'))        
     
     XTu_L <- lapply(Xu_L, function(x){cbind(x,Tu)})
     XTv_L <- lapply(Xv_L, function(x){cbind(x,Tv)})
 
     tXTuXTu_L <- lapply(XTu_L, function(x){ t(x)%*%x })
     tXTvXTv_L <- lapply(XTv_L, function(x){ t(x)%*%x })    
+    rm(list=c('Xu_L','Xv_L','tmp'))    
   }
   
   ###redefining hyperparams
@@ -186,12 +186,13 @@ pgbme <-function(
     paste("s2f", 1:k,sep="")
   )
   
+  yhat   <- matrix(NA, ncol = (NS-burn)/odens, nrow = n^2)
   mcmc.samp <- matrix(NA, nrow = (NS-burn)/odens, ncol = length(cnames))
   mcmc.e <- array(NA, dim = c(n, k, (NS-burn)/odens))
   mcmc.f <- array(NA, dim = c(n, k, (NS-burn)/odens))
   mcmc.s <- matrix(NA, nrow = (NS-burn)/odens, ncol = n)
   mcmc.r <- matrix(NA,  nrow = (NS-burn)/odens, ncol = n)
-  mcmc.xd <- rep(NA, (NS-burn)/odens)
+  mcmc.xd <- rep(NA, (NS-burn)/odens) ; samp <- 1
   nst  <- 1
   
   main.time <- proc.time()
@@ -200,7 +201,7 @@ pgbme <-function(
 
   for(ns in 1:NS){  
   
-    if(xMiss){
+    if(xInclImpList){
       ## sample from posterior of imputed data
       samp <- sample(1:length(X.u_L), 1)
       
@@ -321,6 +322,7 @@ pgbme <-function(
       out <- c(lpy.th, beta.d, beta.u, 
         Sab[1,1], Sab[1,2], Sab[2,2], se, rho, s2e[0:k], s2f[0:k])
       
+      yhat[, nst] <- c(theta - E)
       mcmc.samp[nst, ] <- t(out)
       mcmc.e[, , nst] <- e
       mcmc.f[, , nst] <- f
@@ -350,7 +352,7 @@ pgbme <-function(
   colnames(mcmc.samp) <- cnames
   mcmc.samp <- list(
     est = mcmc.samp, Xd = Xd, s = mcmc.s, r = mcmc.r, 
-    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd)
+    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd, yhat=yhat)
   class(mcmc.samp) <- "gbme"
   return(mcmc.samp)
 } 
@@ -358,13 +360,13 @@ pgbme <-function(
 # End of MCMC: below are helper functions
 
 # calculate y hat from pgbme output
-calc_yhat <- function(m, xMiss=FALSE){
+calc_yhat <- function(m, xInclImpList=FALSE){
   # Dyadic coefficients:
   b <- m$est[,grep("bd", colnames(m$est))]
   # Empty zero matrix
   E <- matrix(0, nrow = nrow(m$Xd), ncol = nrow(m$Xd))  
   # Calculate predictions and collapse
-  if(!xMiss){
+  if(!xInclImpList){
     y_calc <- sapply(1:nrow(b), function(i){
       c(theta.betaX.d.srE.ef(
         b[i, ], m$Xd, m$s[i, ], m$r[i, ], E*0, 
