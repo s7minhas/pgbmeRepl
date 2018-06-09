@@ -1,5 +1,5 @@
 # workspace ###############################
-setwd('~/Research/pgbmeRepl/main')
+setwd('~/Research/pgbmeRepl/main/')
 library(magic)
 library(msm)
 library(lme4)
@@ -30,36 +30,54 @@ mcmc <- function(t, year=pds) {
 	y <- apply(mat.vect(y), 1, prod)
 	xDyadStart = xData[[1]]$xDyad
 	xNodeStart = xData[[1]]$xNode
-	# impsToDraw = 2:length(xData)
-	# xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
-	# xNode = lapply(xData[impsToDraw], function(x){x$xNode})
+	impsToDraw = 2:length(xData)
+	xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
+	xNode = lapply(xData[impsToDraw], function(x){x$xNode})
 	rm(xData)
 
 	est <- pgbme(
 		y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
-		xInclImpList=FALSE, 
-		# Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
+		xInclImpList=TRUE, 
+		Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
 		k = 2, rho.calc = FALSE,
-		# NS = 3e+5, burn = 1.5e+5, odens = 100
-		NS = 1e+5, burn = 5e+4, odens = 10,
+		NS = 2e+4, burn = 1e+4, odens = 10,
 		seed=6886
 		)
+	
+	# save results
 	save(est, file=paste0('results',year[t],'.rda'))
-	return(est) }
+	
+	# gen trace plot
+	ggdata <- data.frame(
+	  cbind( iter=1:nrow(est$est), 
+	    est$est[,grepl('bd|Intercept|bs|br', colnames(est$est))]
+	    ))
+	ggdata <- melt(ggdata, id='iter')
+	g <- ggplot(ggdata, aes(x=iter, y=value)) +
+	  geom_line() +
+	  facet_wrap(~variable, nrow=4, scales='free_y')
+	ggsave(g, file=paste0('convCheck', year[t], '.png'))
+	}
 ################################
 
 # run p-gbme ###############################
+start <- Sys.time()
 cl <- makeCluster(2) ; registerDoParallel(cl)
 results <- foreach(i = 1:length(pds), 
-	.packages=c('abind', 'magic', 'msm', 'lme4', 'mnormt')) %dopar% mcmc(i)
+	.packages=c(
+	  'abind', 'magic', 'msm', 'lme4', 'mnormt',
+	  'reshape2', 'ggplot2'
+	  )
+	) %dopar% mcmc(i)
 stopCluster(cl)
+stop <- Sys.time()
+print(stop - start)
 
 # pull out yhats
-yhats <- lapply(results, function(x){calc_yhat(x,TRUE)})
+yhats <- lapply(pds, function(yr){
+  load(paste0('results',yr,'.rda'))
+  return(calc_yhat(est,TRUE)) })
 names(yhats) <- pds
-
-# clean up workspace
-rm(results)
 ################################
 
 # start pred prob analysis ###############################
@@ -71,7 +89,6 @@ library(latex2exp)
 library(igraph)
 library(countrycode)
 library(data.table)
-library(verification)
 library(coda)
 library(OptimalCutpoints)
 library(caret)
@@ -87,7 +104,8 @@ dplotGG <- function(
 	countryLabel=country){
   yhat = predict.gbme(yPred, yAct, directional=TRUE, threshold=threshold)
   pred = yhat$yhat
-  predDF = data.frame(senProb=pred[country,], recProb=pred[,country],
+  # predDF = data.frame(recProb=pred[country,], senProb=pred[,country], ### pay attention here
+  predDF = data.frame(senProb=pred[country,], recProb=pred[,country], ### pay attention here  	
     cntry=rownames(pred), row.names=NULL, stringsAsFactors = FALSE)
   if(!actual){
     gg = ggplot(predDF, aes(x=senProb, y=recProb))

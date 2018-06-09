@@ -55,12 +55,15 @@ gbme.ef <-function(
   #Details of output
   NS = 100,         #number of scans of mcmc to run
   odens = 1,         #output density
-  seed = 1
+  write = FALSE,          #write output to a file? 
+  ofilename="out",   #name of output file 
+  zwrite = (k>0),      #write z to  file 
+  zfilename = "Z",     #outfile for z 
+  afilename = "A",
+  bfilename = "B",
+  out.name = NULL
 )
 {
-
-  # set seed
-  set.seed(seed)
                                                  
   # Dimensions of everything
   Y  <- Y.start(y)
@@ -69,7 +72,11 @@ gbme.ef <-function(
   rs <<- dim(Xs)[2]
   rr <<- dim(Xr)[2]   
   
-  # Design matrix for unit-specific predictors
+  # Create a folder to write the output
+
+  
+# Design matrix for unit-specific predictors
+  
   X.u <- cbind(rep(.5, 2*n), adiag(Xs,Xr))
   
   # Construct an upper triangular matrix (useful for later computations)
@@ -150,6 +157,7 @@ gbme.ef <-function(
               paste("s2f", 1:k,sep="")
   )
   
+  # yhat   <- matrix(NA, ncol = (NS-burn)/odens, nrow = n^2)
   mcmc.samp <- matrix(NA, nrow = (NS-burn)/odens, ncol = length(cnames))
   mcmc.e <- array(NA, dim = c(n, k, (NS-burn)/odens))
   mcmc.f <- array(NA, dim = c(n, k, (NS-burn)/odens))
@@ -183,12 +191,14 @@ gbme.ef <-function(
 #     }
 #     ## END IMPUTING MISSING VALUES  
     
-    ## AUGMENT LATENT VARIABLES FOR THE PROBIT MODEL
-    mu  <- theta.betaX.d.srE.ef(beta.d, Xd, s, r, E*0, e, f)
-    Z <- update.Z(y, mu, rho, Z)
-    theta <- Z
+## AUGMENT LATENT VARIABLES FOR THE PROBIT MODEL
+mu  <- theta.betaX.d.srE.ef(beta.d, Xd, s, r, E*0, e, f)
+
+Z <- update.Z(y, mu, rho, Z)
+theta <- Z
    
     ### Update regression part
+    
     tmp <- uv.E(theta-e%*%t(f)) #the regression part
     u <- tmp$u                  #u=yij+yji,  i<j
     v <- tmp$v                  #v=yij-yji,  i<j
@@ -207,9 +217,9 @@ gbme.ef <-function(
       if (runif(1) < exp(a)) rho <- fisher.inv(cand)
     }
     
-    se <- 1
-    sv <- 2 - 2*rho
-    su <- 4 - sv
+      se <- 1
+      sv <- 2 - 2*rho
+      su <- 4 - sv
 
     sr.hat <- X.u%*%beta.u    #Sab  
     a <- s-sr.hat[1:n]
@@ -263,14 +273,15 @@ gbme.ef <-function(
       
       out <- c(lpy.th, beta.d, beta.u, Sab[1,1], Sab[1,2], Sab[2,2], se, rho, s2e[0:k], s2f[0:k])
       
-      mcmc.samp[nst, ] <- t(out)
-      mcmc.e[, , nst] <- e
-      mcmc.f[, , nst] <- f
-      mcmc.s[nst, ] <- s
-      mcmc.r[nst, ] <- r
-      nst         <- nst + 1
+  # yhat[, nst] <- c(theta - E)
+  mcmc.samp[nst, ] <- t(out)
+  mcmc.e[, , nst] <- e
+  mcmc.f[, , nst] <- f
+  mcmc.s[nst, ] <- s
+  mcmc.r[nst, ] <- r
+  nst         <- nst + 1
   
-    } # end of output function
+} # end of output function
     
     if (ns==1){
       cat(paste("MCMC sampling. Estimated time ", format(.POSIXct(NS*(proc.time() - main.time)[3],tz="GMT"), "%H:%M:%S"), sep = ""), '\n')
@@ -282,13 +293,14 @@ gbme.ef <-function(
     
   } ## end of MCMC function
   
+  # save(yhat, file="yhat.Rdata")
   cat("\n")
   cat("Time elapsed: ", format(.POSIXct((proc.time() - main.time)[3],tz="GMT"), "%H:%M:%S"), sep = " ", "\n")
   #out <- read.table(paste(out.name, "theta", sep ="/"), header = TRUE)
   colnames(mcmc.samp) <- cnames
   mcmc.samp <- list(est = mcmc.samp, Xd = Xd, s = mcmc.s, r = mcmc.r, e = mcmc.e, f = mcmc.f)
   class(mcmc.samp) <- "gbme"
-  return(mcmc.samp)
+  mcmc.samp
 } 
 
 # End of MCMC: below are helper functions

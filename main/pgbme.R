@@ -105,18 +105,28 @@ pgbme <-function(
   
   # get starting values
   if (is.null(startv)){
-    Xdyad <- apply(Xd, 3, function(x) c(mat.vect(x)))
-    s <- rep(1:n, n-1)
-    r <- rep(1:n, each=n-1)
+    # Xdyad <- apply(Xd, 3, function(x) c(mat.vect(x)))
+    # s <- rep(1:n, n-1)
+    # r <- rep(1:n, each=n-1)
+    # cat("Using MLE to calculate starting values", '\n')
+    # options(warn=-1)        
+    # mle  <- glmer(c(mat.vect(Y)) ~ Xdyad + Xs[s, ] + Xr[r, ] + (1|s) + (1|r), 
+    #   family=binomial(link=probit),
+    #   control=glmerControl( optimizer = "nloptwrap" ) )
+    # startv$beta.d <- fixef(mle)[grepl("Xdyad", names(fixef(mle)))]
+    # startv$beta.u <- c(
+    #   fixef(mle)[1], fixef(mle)[grepl("Xs", names(fixef(mle)))], 
+    #   fixef(mle)[grepl("Xr", names(fixef(mle)))])    
+    X <- apply(Xd, 3, c) 
+    s <- rep(1:n, n)
+    r <- rep(1:n, each=n)           
     cat("Using MLE to calculate starting values", '\n')
-    options(warn=-1)
-    mle  <- glmer(c(mat.vect(Y)) ~ Xdyad + Xs[s, ] + Xr[r, ] + (1|s) + (1|r), 
-      family=binomial(link=probit),
-      control=glmerControl( optimizer = "nloptwrap" ) )
-    startv$beta.d <- fixef(mle)[grepl("Xdyad", names(fixef(mle)))]
-    startv$beta.u <- c(
-      fixef(mle)[1], fixef(mle)[grepl("Xs", names(fixef(mle)))], 
-      fixef(mle)[grepl("Xr", names(fixef(mle)))])
+    options(warn=-1)    
+    mle  <- glmer(c(Y) ~ X + (1|s) + (1|r), 
+      family=binomial(link=probit), nAGQ=0,
+      control=glmerControl( optimizer = "nloptwrap" ) )    
+    startv$beta.d <- fixef(mle)[-1]
+    startv$beta.u <- c(fixef(mle)[1], rep(0, rs+rr))
     startv$s <- ranef(mle)$s[,1]
     startv$r <- ranef(mle)$r[,1]
     startv$z <- matrix(0, n, max(k,1))
@@ -149,17 +159,16 @@ pgbme <-function(
     rm(list=c('Xu','Xv','tmp'))
   } else {
     tmp <- list()
-    for(ii in 1:length(Xd_L)){
-      tmp[[ii]] <- XuXv(Xd_L[[ii]]) }
+    for(ii in 1:length(Xd_L)){ tmp[[ii]] <- XuXv(Xd_L[[ii]]) }
     Xu_L <- lapply(tmp, function(x){x$Xu})
     Xv_L <- lapply(tmp, function(x){x$Xv})
     
     XTu_L <- lapply(Xu_L, function(x){cbind(x,Tu)})
     XTv_L <- lapply(Xv_L, function(x){cbind(x,Tv)})
+    rm(list=c('Xu_L','Xv_L','tmp'))    
 
     tXTuXTu_L <- lapply(XTu_L, function(x){ t(x)%*%x })
     tXTvXTv_L <- lapply(XTv_L, function(x){ t(x)%*%x })    
-    rm(list=c('Xu_L','Xv_L','tmp'))    
   }
   
   ###redefining hyperparams
@@ -198,7 +207,6 @@ pgbme <-function(
   main.time <- proc.time()
 
   ##### The Markov chain Monte Carlo algorithm
-
   for(ns in 1:NS){  
   
     if(xInclImpList){
@@ -402,9 +410,9 @@ XuXv<-function(X){
 
 ###
 uv.E<-function(E){
-  u<- c(  t( (  E + t(E))*UT ) )
+  u<- c(  t( (  E + t(E) )  *UT ) )
   u<-u[!is.na(u)]
-  v<-c(  t( (  E - t(E))*UT ) )
+  v<-c(  t( (  E - t(E) )  *UT ) )
   v<-v[!is.na(v)]
   list(u=u,v=v)
 }
@@ -663,7 +671,10 @@ if (threshold == "optimal"){
     yhat <- mat.vect(yhat) 
     yhat <- 1*(yhat > t)
     yhat <- apply(yhat, 1, prod)
-    - (sensitivity(as.factor(yhat), as.factor(yobs)) + specificity(as.factor(yhat), as.factor(yobs)))
+    - (
+      sensitivity(
+        as.factor(yhat), as.factor(yobs)) + specificity(as.factor(yhat), as.factor(yobs))
+      )
   }
 }
   

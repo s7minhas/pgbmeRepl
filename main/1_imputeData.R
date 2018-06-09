@@ -24,7 +24,7 @@ sbgMod = sbgcop.mcmc(forSbg, nsamp=1000, odens=1, seed=6886)
 
 # pull out a few imp datasets
 set.seed(6886)
-impIters = sample(501:1000, 6)
+impIters = sample(501:1000, 11)
 sbgImps = lapply(impIters, function(i){
 	x = sbgMod$Y.impute[,,i] ; colnames(x) = colnames(sbgMod$Y.pmean)
 	return( data.frame(covDataL[,1:3], x, row.names=NULL) ) })
