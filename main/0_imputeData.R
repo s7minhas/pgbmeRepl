@@ -1,6 +1,9 @@
 # workspace ###############################
-setwd('~/Research/pgbmeRepl/main')
 rm(list=ls())
+path <- '~/Research/pgbmeRepl/main/'
+setwd(path)
+
+# load libraries
 library(tidyr)
 library(reshape2)
 library(sbgcop)
@@ -33,7 +36,7 @@ sbgImps[[1]] = data.frame(covDataL[,1:3], sbgMod$Y.pmean,row.names=NULL)
 
 # design structs ###############################
 cl=makeCluster(2) ; registerDoParallel(cl)
-shhh <- foreach(t = c('1995','2010')) %dopar% {
+shhh <- foreach(t = c('1995','2010','2012')) %dopar% {
 
 	# iterate over every imp
 	xData = lapply(sbgImps, function(x){

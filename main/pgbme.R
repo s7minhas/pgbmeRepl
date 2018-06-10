@@ -72,7 +72,7 @@ pgbme <-function(
                                                  
   # Dimensions of everything
   Y  <- Y.start(y)
-  n  <<- ncol(Y)
+  n  <- ncol(Y)
   rd <<- dim(Xd)[3]
   rs <<- dim(Xs)[2]
   rr <<- dim(Xr)[2]   
@@ -104,19 +104,7 @@ pgbme <-function(
   }
   
   # get starting values
-  if (is.null(startv)){
-    # Xdyad <- apply(Xd, 3, function(x) c(mat.vect(x)))
-    # s <- rep(1:n, n-1)
-    # r <- rep(1:n, each=n-1)
-    # cat("Using MLE to calculate starting values", '\n')
-    # options(warn=-1)        
-    # mle  <- glmer(c(mat.vect(Y)) ~ Xdyad + Xs[s, ] + Xr[r, ] + (1|s) + (1|r), 
-    #   family=binomial(link=probit),
-    #   control=glmerControl( optimizer = "nloptwrap" ) )
-    # startv$beta.d <- fixef(mle)[grepl("Xdyad", names(fixef(mle)))]
-    # startv$beta.u <- c(
-    #   fixef(mle)[1], fixef(mle)[grepl("Xs", names(fixef(mle)))], 
-    #   fixef(mle)[grepl("Xr", names(fixef(mle)))])    
+  if (is.null(startv)){  
     X <- apply(Xd, 3, c) 
     s <- rep(1:n, n)
     r <- rep(1:n, each=n)           
@@ -282,7 +270,7 @@ pgbme <-function(
     
     #dyad specific regression coef and unit level effects
     mu<-c(pim.bd, X.u%*%beta.u)    #"prior" mean for (beta.d,s,r)
-    beta.d.sr <- rbeta.d.sr.gibbs(u,v,su,sv,piS.bd,mu,Sab) 
+    beta.d.sr <- rbeta.d.sr.gibbs(u,v,su,sv,piS.bd,mu,Sab,n) 
     beta.d <- beta.d.sr$beta.d ; s<-beta.d.sr$s ; r<-beta.d.sr$r
     #regression coef for unit level effects
     beta.u<-rbeta.sr.gibbs(s,r,X.u,pim.b0sr,piS.b0sr,Sab)           
@@ -371,6 +359,7 @@ pgbme <-function(
 
 # SAMPLE Y from posterior predictive distribtuion
 pred.y <- function(theta, rho, se, fam="gaussian"){
+  n <- nrow(theta)
   e <- rmnorm(n*(n-1)/2, varcov = se*covmat(rho))
   e <- vect.mat(e)
   Y <- theta + e
@@ -396,6 +385,7 @@ TuTv<-function(n){
 ####
 
 XuXv<-function(X){
+  n <- nrow(X)
   Xu<-Xv<-NULL
   if(dim(X)[3]>0){
     for(r in 1:dim(X)[3]){
@@ -454,7 +444,7 @@ reef<-function(a,b,E,e,f){
 
 
 ####
-rbeta.d.sr.gibbs <- function(u,v,su,sv,piS.bd,mu,Sab){
+rbeta.d.sr.gibbs <- function(u,v,su,sv,piS.bd,mu,Sab,n){
   del<-Sab[1,1]*Sab[2,2]-Sab[1,2]^2
   iSab<-rbind(cbind( diag(rep(1,n))*Sab[2,2]/del ,-diag(rep(1,n))*Sab[1,2]/del),
               cbind( -diag(rep(1,n))*Sab[1,2]/del,diag(rep(1,n))*Sab[1,1]/del) )
@@ -485,6 +475,7 @@ rse.beta.d.gibbs<-function(g0,g1,x,XTx,s,r,beta.d){
 
 ####
 rbeta.sr.gibbs<-function(s,r,X.u,pim.b0sr,piS.b0sr,Sab) {
+  n <- length(s)
   del<-Sab[1,1]*Sab[2,2]-Sab[1,2]^2
   iSab<-rbind(cbind( diag(rep(1,n))*Sab[2,2]/del ,-diag(rep(1,n))*Sab[1,2]/del),
               cbind( -diag(rep(1,n))*Sab[1,2]/del,diag(rep(1,n))*Sab[1,1]/del) )
@@ -704,4 +695,45 @@ if (!directional){
 
   return(list(yhat = yhat, y = y))
   }
+}
+
+# Predicted probabilities directional network:
+# $yhat predicted probabilities
+# $y    optimal classification  
+dplotGG <- function(
+  yPred, yAct, country, 
+  actual=FALSE, threshold=NULL, 
+  countryLabel=country){
+  yhat = predict.gbme(yPred, yAct, directional=TRUE, threshold=threshold)
+  pred = yhat$yhat
+  # predDF = data.frame(recProb=pred[country,], senProb=pred[,country], ### pay attention here
+  predDF = data.frame(senProb=pred[country,], recProb=pred[,country], ### pay attention here    
+    cntry=rownames(pred), row.names=NULL, stringsAsFactors = FALSE)
+  if(!actual){
+    gg = ggplot(predDF, aes(x=senProb, y=recProb))
+  }
+  if(actual){
+    true = data.matrix(yhat$y)
+    trueDF = data.frame(actBIT=true[country,], cntry=rownames(true),
+      row.names=NULL, stringsAsFactors=FALSE)
+    predDF$actBIT = trueDF$actBIT[match(predDF$cntry,trueDF$cntry)]
+    gg = ggplot(predDF, aes(x=senProb, y=recProb, color=factor(actBIT))) +
+      # scale_color_manual(values=c('1'='#67a9cf','0'='#ef8a62','NA'='white'))
+    scale_color_manual(values=c('1'='#4393c3','0'='#d6604d','NA'='white'))
+  }
+  gg = gg + 
+    geom_abline(color='grey40', linetype='dashed') +
+    geom_text(aes(label=cntry), size=2) +
+    labs(
+      x=paste("Probability", countryLabel, "demands treaty from the other"),
+      y=paste("Probability", countryLabel, "is demanded as treaty partner")
+      ) +
+    theme(
+      axis.text = element_text(size=6),
+      axis.title = element_text(size=8),
+      axis.ticks=element_blank(),
+      panel.border=element_blank(),
+      legend.position='none'
+      )
+    return(gg)
 }

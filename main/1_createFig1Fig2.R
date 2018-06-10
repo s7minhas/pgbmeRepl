@@ -1,5 +1,9 @@
 # workspace ###############################
-setwd('~/Research/pgbmeRepl/main/')
+rm(list=ls())
+path <- '~/Research/pgbmeRepl/main/'
+setwd(path)
+
+# load libraries
 library(magic)
 library(msm)
 library(lme4)
@@ -7,6 +11,9 @@ library(mnormt)
 library(abind)
 library(foreach)
 library(doParallel)
+library(reshape2)
+library(ggplot2)
+theme_set(theme_bw())
 
 # helpers
 source("pgbme.R")
@@ -35,6 +42,7 @@ mcmc <- function(t, year=pds) {
 	xNode = lapply(xData[impsToDraw], function(x){x$xNode})
 	rm(xData)
 
+  set.seed(6886)
 	est <- pgbme(
 		y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
 		xInclImpList=TRUE, 
@@ -46,32 +54,23 @@ mcmc <- function(t, year=pds) {
 	
 	# save results
 	save(est, file=paste0('results',year[t],'.rda'))
-	
-	# gen trace plot
-	ggdata <- data.frame(
-	  cbind( iter=1:nrow(est$est), 
-	    est$est[,grepl('bd|Intercept|bs|br', colnames(est$est))]
-	    ))
-	ggdata <- melt(ggdata, id='iter')
-	g <- ggplot(ggdata, aes(x=iter, y=value)) +
-	  geom_line() +
-	  facet_wrap(~variable, nrow=4, scales='free_y')
-	ggsave(g, file=paste0('convCheck', year[t], '.png'))
 	}
 ################################
 
 # run p-gbme ###############################
-start <- Sys.time()
-cl <- makeCluster(2) ; registerDoParallel(cl)
-results <- foreach(i = 1:length(pds), 
-	.packages=c(
-	  'abind', 'magic', 'msm', 'lme4', 'mnormt',
-	  'reshape2', 'ggplot2'
-	  )
-	) %dopar% mcmc(i)
-stopCluster(cl)
-stop <- Sys.time()
-print(stop - start)
+if(
+  !all(
+    paste0('results',c(1995,2010),'.rda') %in% list.files()
+    )
+  ){
+  cl <- makeCluster(2) ; registerDoParallel(cl)
+  results <- foreach(i = 1:length(pds), 
+    .packages=c(
+      'abind', 'magic', 'msm', 'lme4', 'mnormt'
+      )
+    ) %dopar% { mcmc(i) }
+  stopCluster(cl)
+}
 
 # pull out yhats
 yhats <- lapply(pds, function(yr){
@@ -80,65 +79,8 @@ yhats <- lapply(pds, function(yr){
 names(yhats) <- pds
 ################################
 
-# start pred prob analysis ###############################
-library(reshape2)
-library(ggplot2)
-theme_set(theme_bw())
-library(tidyr)
-library(latex2exp)
-library(igraph)
-library(countrycode)
-library(data.table)
-library(coda)
-library(OptimalCutpoints)
-library(caret)
-################################
-
 # figure 1  ###############################
-# Predicted probabilities directional network:
-# $yhat predicted probabilities
-# $y    optimal classification  
-dplotGG <- function(
-	yPred, yAct, country, 
-	actual=FALSE, threshold=NULL, 
-	countryLabel=country){
-  yhat = predict.gbme(yPred, yAct, directional=TRUE, threshold=threshold)
-  pred = yhat$yhat
-  # predDF = data.frame(recProb=pred[country,], senProb=pred[,country], ### pay attention here
-  predDF = data.frame(senProb=pred[country,], recProb=pred[,country], ### pay attention here  	
-    cntry=rownames(pred), row.names=NULL, stringsAsFactors = FALSE)
-  if(!actual){
-    gg = ggplot(predDF, aes(x=senProb, y=recProb))
-  }
-  if(actual){
-    true = data.matrix(yhat$y)
-    trueDF = data.frame(actBIT=true[country,], cntry=rownames(true),
-      row.names=NULL, stringsAsFactors=FALSE)
-    predDF$actBIT = trueDF$actBIT[match(predDF$cntry,trueDF$cntry)]
-    gg = ggplot(predDF, aes(x=senProb, y=recProb, color=factor(actBIT))) +
-      # scale_color_manual(values=c('1'='#67a9cf','0'='#ef8a62','NA'='white'))
-    scale_color_manual(values=c('1'='#4393c3','0'='#d6604d','NA'='white'))
-  }
-  gg = gg + 
-    geom_abline(color='grey40', linetype='dashed') +
-    geom_text(aes(label=cntry), size=2) +
-    labs(
-      x=paste("Probability", countryLabel, "demands treaty from the other"),
-      y=paste("Probability", countryLabel, "is demanded as treaty partner")
-      ) +
-    theme(
-      axis.text = element_text(size=6),
-      axis.title = element_text(size=8),
-      axis.ticks=element_blank(),
-      panel.border=element_blank(),
-      legend.position='none'
-      )
-    return(gg)
-}
-
-# load y matrix
 load('rawData.rda')
-
 chn95grey = dplotGG(
 	yhats$'1995', bit.acc.t$'1995',
 	"CHN", actual =T, countryLabel='China') +
@@ -169,7 +111,8 @@ predDF$cntry = factor(predDF$cntry, levels=rev(predDF$cntry))
 
 #
 predDF$cntryTop = char(predDF$cntry) ; predDF$cntryBot = char(predDF$cntry)
-for(i in 1:nrow(predDF)){ if(i %% 2 == 0){predDF$cntryTop[i]=''}else{predDF$cntryBot[i]=''} }
+for(i in 1:nrow(predDF)){
+  if(i %% 2 == 0){predDF$cntryTop[i]=''}else{predDF$cntryBot[i]=''} }
 
 # 
 predDF$actBIT[predDF$actBIT==1] = 'BIT signed by 2010'
@@ -177,7 +120,7 @@ predDF$actBIT[predDF$actBIT==0] = 'No BIT signed by 2010'
 ggcols = c('BIT signed by 2010'='#4393c3','No BIT signed by 2010'='#d6604d')
 
 #
-ggHorizUSA = ggplot(predDF, aes(x=cntry, color=factor(actBIT))) +
+ggVertUSA = ggplot(predDF, aes(x=cntry, color=factor(actBIT))) +
   geom_linerange(aes(ymin=0,ymax=-recProb), linetype='solid', size=1) +
   geom_linerange(aes(ymax=0,ymin=senProb), linetype='solid', size=1) +
   geom_hline(aes(yintercept=0), color='gray40', size=1) +    
@@ -185,23 +128,17 @@ ggHorizUSA = ggplot(predDF, aes(x=cntry, color=factor(actBIT))) +
   geom_point(aes(y=senProb), shape=17, size=1.7) +  
   geom_vline(aes(xintercept=16.5), size=.8, linetype='dashed', color='gray60') +      
   scale_y_continuous(breaks=seq(-1,1,.25), labels=abs(seq(-1,1,.25))) +
-  scale_color_manual(values=ggcols) +
+  scale_color_manual(values=c('#000000', '#969696')) +
   xlab('') + 
   ylab('Probability USA is demanded    Probability USA demands   \n   as treaty partner (square)     treaty from other (triangle)') +
+  coord_flip() +
   theme(
     axis.ticks=element_blank(),
     panel.border=element_blank(),
-    axis.text.x=element_blank(),
+    axis.text.x=element_text(size=7),
+    axis.text.y=element_text(size=6),
     legend.position='bottom',
     legend.title=element_blank()
     )
-
-ggVertUSA = ggHorizUSA + 
-  coord_flip() +
-  theme(
-    axis.text.x=element_text(size=7),
-    axis.text.y=element_text(size=6)
-    ) +
-  scale_color_manual(values=c('#000000', '#969696'))
 ggsave(ggVertUSA, file='figure2.pdf', height=6, width=5)
 ################################

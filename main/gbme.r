@@ -129,7 +129,7 @@ set.seed(seed)
 
 
 ###dimensions of everything
-n<<-dim(Y)[1]
+n<-dim(Y)[1]
 rd<<-dim(Xd)[3]
 rs<<-dim(Xs)[2]
 rr<<-dim(Xr)[2]   
@@ -308,16 +308,16 @@ if( directed==F ) { s2a<-1/rgamma( 1, pi.s2a[1]+n/2 , pi.s2a[2]+sum(a^2)/2 ) }
 #dyad specific regression coef and unit level effects
 mu<-c(pim.bd, X.u%*%beta.u)    #"prior" mean for (beta.d,s,r)
 if(directed==T){
-beta.d.sr<-rbeta.d.sr.gibbs(u,v,su,sv,piS.bd,mu,Sab) 
+beta.d.sr<-rbeta.d.sr.gibbs(u,v,su,sv,piS.bd,mu,Sab,n) 
 beta.d<-beta.d.sr$beta.d ; s<-beta.d.sr$s ; r<-beta.d.sr$r
 #regression coef for unit level effects
 beta.u<-rbeta.sr.gibbs(s,r,X.u,pim.b0sr,piS.b0sr,Sab)
                 }
 if(directed==F) {
-beta.d.s<-rbeta.d.s.gibbs(u,su,piS.bd,mu,s2a)
+beta.d.s<-rbeta.d.s.gibbs(u,su,piS.bd,mu,s2a,n)
 beta.d<-beta.d.s$beta.d ; s<-beta.d.s$s
 #regression coef for unit level effects
-beta.u<-rbeta.s.gibbs(s,X.u,pim.b0s,piS.b0s,s2a)
+beta.u<-rbeta.s.gibbs(s,X.u,pim.b0s,piS.b0s,s2a,n)
                  }
 ###
 
@@ -451,6 +451,7 @@ list(Tu=cbind(Xu,Xu),Tv=cbind(Xv,-Xv))
 ####
 
 XuXv<-function(X){
+n <- nrow(X)  
 Xu<-Xv<-NULL
 if(dim(X)[3]>0){
 for(r in 1:dim(X)[3]){
@@ -492,7 +493,7 @@ matrix(a,nrow=n,ncol=n,byrow=F)+matrix(b,nrow=n,ncol=n,byrow=T)+E+z%*%t(z) }
 ####
 
 ####
-rbeta.d.sr.gibbs<-function(u,v,su,sv,piS.bd,mu,Sab){
+rbeta.d.sr.gibbs<-function(u,v,su,sv,piS.bd,mu,Sab,n){
 del<-Sab[1,1]*Sab[2,2]-Sab[1,2]^2
 iSab<-rbind(cbind( diag(rep(1,n))*Sab[2,2]/del ,-diag(rep(1,n))*Sab[1,2]/del),
           cbind( -diag(rep(1,n))*Sab[1,2]/del,diag(rep(1,n))*Sab[1,1]/del) )
@@ -524,6 +525,7 @@ n<-length(s)
 
 ####
 rbeta.sr.gibbs<-function(s,r,X.u,pim.b0sr,piS.b0sr,Sab) {
+n <- length(s)
 del<-Sab[1,1]*Sab[2,2]-Sab[1,2]^2
 iSab<-rbind(cbind( diag(rep(1,n))*Sab[2,2]/del ,-diag(rep(1,n))*Sab[1,2]/del),
           cbind( -diag(rep(1,n))*Sab[1,2]/del,diag(rep(1,n))*Sab[1,1]/del) )
@@ -691,7 +693,7 @@ list( priors=list(pi.Sab=pi.Sab,pi.s2u=pi.s2u,pi.s2v=pi.s2v,pi.s2z=pi.s2z,
 
 
 ####
-rbeta.d.s.gibbs<-function(u,su,piS.bd,mu,s2a){
+rbeta.d.s.gibbs<-function(u,su,piS.bd,mu,s2a,n){
 iSa<-diag(rep(1/s2a,n))
 
 if(dim(piS.bd)[1]>0){
@@ -710,7 +712,7 @@ list(beta.d=beta.s[(rd>0):rd],s=beta.s[rd+1:n]) }
 ####
 
 ####
-rbeta.s.gibbs<-function(s,X.u,pim.b0s,piS.b0s,s2a) {
+rbeta.s.gibbs<-function(s,X.u,pim.b0s,piS.b0s,s2a,n) {
 iSa<-diag(rep(1/s2a,n))
 
 S<-solve( solve(piS.b0s) + t(X.u)%*%iSa%*%X.u )
@@ -718,3 +720,58 @@ mu<-S%*%(  solve(piS.b0s)%*%pim.b0s+ t(X.u)%*%iSa%*%s)
 rmvnorm( mu,S)
                                                }
 
+calc_yhat_gbme <- function(y, xDyad, xNode, gbmePath){
+
+  # read in model results
+  OUT = read.table(paste0(gbmePath, 'OUT'), header=TRUE)
+  a = read.table(paste0(gbmePath, 'A'), header=TRUE)
+  Z = read.table(paste0(gbmePath, 'z'), header=TRUE)
+
+  #convert to an array
+  nss<-dim(OUT)[1]
+  nss <- nrow(a)
+  n<-nrow(xNode)
+  k<-dim(Z)[2]
+  PZ<-array(dim=c(n,k,nss))
+  for(i in 1:nss) { PZ[,,i]<-as.matrix(Z[ ((i-1)*n+1):(i*n) ,])  }
+  PZ<-PZ[,,-(1:round(nss/2))]     #drop first half for burn in
+
+  #find posterior mean of Z %*% t(Z)
+  ZTZ<-matrix(0,n,n)
+  for(i in 1:dim(PZ)[3] ) { ZTZ<-ZTZ+PZ[,,i]%*%t(PZ[,,i]) }
+  ZTZ<-ZTZ/dim(PZ)[3] 
+
+  #a configuration that approximates posterior mean of ZTZ
+  tmp<-eigen(ZTZ)
+  Z.pm<-tmp$vec[,1:k]%*%sqrt(diag(tmp$val[1:k]))
+
+  # burn first half of chain and get means
+  OUT = OUT[round(nrow(OUT)/2,0):nrow(OUT),c('scan','b0',paste0('bd',1:5),paste0('bs',1:4))]
+  betaTab = t(apply(OUT[,-1], 2, function(x){
+    c(mu=mean(x), med=median(x), quantile(x, c(.025,.05,.95,.975))) }))
+  rownames(betaTab) = c('Intercept', dimnames(xDyad)[[3]], colnames(xNode))
+  beta = apply(OUT, 2, mean)[-1]
+  a = a[round(nrow(a)/2,0):nrow(a),]
+  aMu = apply(a, 2, mean)
+
+  # 
+  ddesign = dcast(reshape2::melt(xDyad), Var1 + Var2  ~ Var3)
+  for(v in colnames(xNode)){
+    ddesign$tmp = xNode[,v][match(ddesign$Var1, rownames(xNode))]
+    names(ddesign)[ncol(ddesign)] = v }
+  ddesign = ddesign[ddesign$Var1 != ddesign$Var2, ]
+  ddesign$y = melt(y)$value[match(
+    paste0(ddesign$Var1,'_',ddesign$Var2),
+    paste0(melt(y)$Var1,'_',melt(y)$Var2) )]
+  ddesign$a = aMu[match(ddesign$Var1, rownames(y))]
+  tmp = Z.pm %*% t(Z.pm) ; diag(tmp) = NA
+  ddesign$ztz = tmp[!is.na(tmp)] ; rm(tmp)
+
+  #
+  X = cbind(1, ddesign[,c(dimnames(xDyad)[[3]], colnames(xNode))])
+  gbmePred = data.matrix(X) %*% beta + ddesign$a + ddesign$ztz
+  ddesign$gbmeProb = c(pnorm(gbmePred)) 
+
+  #
+  return(ddesign)
+}
