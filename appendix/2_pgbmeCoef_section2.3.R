@@ -159,7 +159,6 @@ ggConv = function(theta, xTitle, xLabAdd=FALSE){
 
 # generate trace plot for 2012
 theta=data.frame(thetaL[[length(pds)]])
-theta=theta[600:nrow(theta),]
 theta$imp = 1:nrow(theta)
 theta = melt(theta, id='imp')
 theta$name = varKey$clean[match(theta$variable, varKey$var)]
@@ -180,7 +179,6 @@ ggsave(dsrCoef, width=10, height=7.5, file='figureA2.png')
 # parameter estimates over time ###############################
 coefData = do.call('rbind', lapply(1:length(pds), function(i){
 	theta=thetaL[[i]]
-	theta=theta[600:nrow(theta),]
 	summ = data.frame(t(apply(theta, 2, summStats)), stringsAsFactors=NULL)
 	summ$var = rownames(summ) ; summ$name = varKey$clean[match(summ$var, varKey$var)]
 	colnames(summ)[2:5] = c('lo95','lo90','up90','up95')
