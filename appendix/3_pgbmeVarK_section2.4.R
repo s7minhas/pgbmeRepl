@@ -44,21 +44,23 @@ rm(xData)
 ################################
 
 # run pgbme varying k ###############################
-cores = 5
-cl=makeCluster(cores) ; registerDoParallel(cl)
-shhh <- foreach(rank = 1:5, 
-	.packages=c('lme4','magic','msm','mnormt')
-	) %dopar% {
-	set.seed(6886)
-	est <- pgbme(
-		y = y, Xd = xDyad, Xs = xNode, Xr = xNode, 
-		k = rank, rho.calc = FALSE,
-		NS = 2e+4, burn = 1e+4, odens = 10, 
-		xInclImpList=FALSE, seed=6886
-		)
-	save(est, file=paste0('results2012_k',rank,'.rda'))
+if(!all(paste0('results2012_k', 1:5, '.rda') %in% list.files())){
+	cores = 5
+	cl=makeCluster(cores) ; registerDoParallel(cl)
+	shhh <- foreach(rank = 1:5, 
+		.packages=c('lme4','magic','msm','mnormt')
+		) %dopar% {
+		set.seed(6886)
+		est <- pgbme(
+			y = y, Xd = xDyad, Xs = xNode, Xr = xNode, 
+			k = rank, rho.calc = FALSE,
+			NS = 4e+4, burn = 2e+4, odens = 20, 
+			xInclImpList=FALSE, seed=6886
+			)
+		save(est, file=paste0('results2012_k',rank,'.rda'))
+	}
+	stopCluster(cl)
 }
-stopCluster(cl)
 ################################
 
 # pull out yhats ###############################

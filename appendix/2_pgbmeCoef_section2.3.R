@@ -48,67 +48,67 @@ sbgImps[[1]] = data.frame(covDataL[,1:3], sbgMod$Y.pmean,row.names=NULL)
 
 # design structs ###############################
 pds <- char(1990:2012)
-cores <- length(pds)
-cores <- 5
-cl=makeCluster(cores) ; registerDoParallel(cl)
-shhh <- foreach(t = pds, 
-	.packages = c('abind', 'magic', 'msm', 'lme4', 'mnormt')
-	) %dopar% {
+if(!all(paste0('results', pds, '.rda') %in% list.files())){
+	cores <- length(pds)
+	cl=makeCluster(cores) ; registerDoParallel(cl)
+	shhh <- foreach(t = pds, 
+		.packages = c('abind', 'magic', 'msm', 'lme4', 'mnormt')
+		) %dopar% {
 
-	# iterate over every imp
-	xData = lapply(sbgImps, function(x){
-		xN = x[x$year==num(t),] ; xN$gdpCapLog = log(xN$gdpCap + 1)
-		rownames(xN) = xN$Country.Code ; xN = xN[rownames(bit.acc.t[[t]]),]
+		# iterate over every imp
+		xData = lapply(sbgImps, function(x){
+			xN = x[x$year==num(t),] ; xN$gdpCapLog = log(xN$gdpCap + 1)
+			rownames(xN) = xN$Country.Code ; xN = xN[rownames(bit.acc.t[[t]]),]
 
-		# dyad covars
-		xDyad = array(NA, dim=c(dim(bit.acc.t[[t]]), 5), 
-			dimnames=list(rownames(bit.acc.t[[t]]), rownames(bit.acc.t[[t]]), 
-				c('udsDiff', 'lawOrderDiff', 'gdpCapLogDiff', 'oecdJoint', 'dist')))
-		for(i in rownames(xDyad)){
-			xDyad[i,,'udsDiff'] = abs( xN[i,'uds_median'] - xN[,'uds_median'])
-			xDyad[i,,'lawOrderDiff'] = abs( xN[i,'lawOrder'] - xN[,'lawOrder'])
-			xDyad[i,,'gdpCapLogDiff'] = abs( xN[i,'gdpCapLog'] - xN[,'gdpCapLog'])
-			xDyad[i,,'oecdJoint'] = xN[i,'oecd'] * xN[,'oecd'] }
-		xDyad[,,'dist'] = dist.norm[[t]]
-		for(p in 1:dim(xDyad)[3]){ xDyad[,,p] = cntr(xDyad[,,p]) }
+			# dyad covars
+			xDyad = array(NA, dim=c(dim(bit.acc.t[[t]]), 5), 
+				dimnames=list(rownames(bit.acc.t[[t]]), rownames(bit.acc.t[[t]]), 
+					c('udsDiff', 'lawOrderDiff', 'gdpCapLogDiff', 'oecdJoint', 'dist')))
+			for(i in rownames(xDyad)){
+				xDyad[i,,'udsDiff'] = abs( xN[i,'uds_median'] - xN[,'uds_median'])
+				xDyad[i,,'lawOrderDiff'] = abs( xN[i,'lawOrder'] - xN[,'lawOrder'])
+				xDyad[i,,'gdpCapLogDiff'] = abs( xN[i,'gdpCapLog'] - xN[,'gdpCapLog'])
+				xDyad[i,,'oecdJoint'] = xN[i,'oecd'] * xN[,'oecd'] }
+			xDyad[,,'dist'] = dist.norm[[t]]
+			for(p in 1:dim(xDyad)[3]){ xDyad[,,p] = cntr(xDyad[,,p]) }
 
-		# nodal covars
-		xN = data.matrix(xN[,c('fdiGdp','dispC','gdpCapGr','ptaCumul')])
-		xN = apply(xN, 2, cntr)
+			# nodal covars
+			xN = data.matrix(xN[,c('fdiGdp','dispC','gdpCapGr','ptaCumul')])
+			xN = apply(xN, 2, cntr)
 
-		# red
-		return(list(xDyad=xDyad,xNode=xN)) })
+			# red
+			return(list(xDyad=xDyad,xNode=xN)) })
 
-	# pull in mcmc code
-	source(paste0(mPath, "pgbme.R"))
+		# pull in mcmc code
+		source(paste0(mPath, "pgbme.R"))
 
-	# organize data for pgbme
-	y <- bit.acc.t[[ t ]]
-	y <- apply(mat.vect(y), 1, prod)
-	xDyadStart = xData[[1]]$xDyad
-	xNodeStart = xData[[1]]$xNode
-	impsToDraw = 2:length(xData)
-	xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
-	xNode = lapply(xData[impsToDraw], function(x){x$xNode})
-	rm(xData)
+		# organize data for pgbme
+		y <- bit.acc.t[[ t ]]
+		y <- apply(mat.vect(y), 1, prod)
+		xDyadStart = xData[[1]]$xDyad
+		xNodeStart = xData[[1]]$xNode
+		impsToDraw = 2:length(xData)
+		xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
+		xNode = lapply(xData[impsToDraw], function(x){x$xNode})
+		rm(xData)
 
-  	set.seed(6886)
-	est <- pgbme(
-		y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
-		xInclImpList=TRUE, 
-		Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
-		k = 2, rho.calc = FALSE,
-		# NS = 2e+4, burn = 1e+4, odens = 10,
-		NS = 10, burn = 2, odens = 1,		
-		seed=6886
-		)
+	  	set.seed(6886)
+		est <- pgbme(
+			y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
+			xInclImpList=TRUE, 
+			Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
+			k = 2, rho.calc = FALSE,
+			NS = 4e+4, burn = 2e+4, odens = 20,
+			seed=6886
+			)
 
-	# save
-	est <- est$est[,grepl('bd|bs|br',colnames(est$est))]
-	colnames(est)[1:5] <- paste0('bd.',1:5)
-	save(est, file=paste0('results',t,'.rda'))
+		# save
+		est <- est$est[,grepl('bd|bs|br',colnames(est$est))]
+		colnames(est)[1:5] <- paste0('bd.',1:5)
+		save(est, file=paste0('results',t,'.rda'))
+	}
+	stopCluster(cl)
 }
-stopCluster(cl)
 ################################
 
 # var key ###############################
@@ -158,8 +158,8 @@ ggConv = function(theta, xTitle, xLabAdd=FALSE){
 	return(g) }
 
 # generate trace plot for 2012
-theta=thetaL[[length(pds)]]
-theta=data.frame(theta[2:nrow(theta),])
+theta=data.frame(thetaL[[length(pds)]])
+theta=theta[600:nrow(theta),]
 theta$imp = 1:nrow(theta)
 theta = melt(theta, id='imp')
 theta$name = varKey$clean[match(theta$variable, varKey$var)]
@@ -180,7 +180,7 @@ ggsave(dsrCoef, width=10, height=7.5, file='figureA2.png')
 # parameter estimates over time ###############################
 coefData = do.call('rbind', lapply(1:length(pds), function(i){
 	theta=thetaL[[i]]
-	theta=theta[2:nrow(theta),]
+	theta=theta[600:nrow(theta),]
 	summ = data.frame(t(apply(theta, 2, summStats)), stringsAsFactors=NULL)
 	summ$var = rownames(summ) ; summ$name = varKey$clean[match(summ$var, varKey$var)]
 	colnames(summ)[2:5] = c('lo95','lo90','up90','up95')
