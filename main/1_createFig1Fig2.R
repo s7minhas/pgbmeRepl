@@ -32,7 +32,7 @@ mcmc <- function(t, year=pds) {
 	# load data
 	load( paste0('modelData',year[t],'.rda') )
 
-	# sample from posterior of imputed datasets
+	# organize data for pgbme
 	y <- bit.acc.t[[ char(year[t]) ]]
 	y <- apply(mat.vect(y), 1, prod)
 	xDyadStart = xData[[1]]$xDyad
