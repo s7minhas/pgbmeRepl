@@ -71,7 +71,7 @@ if(!file.exists('pgbme_sim_results.rda')){
 	clusterExport(cl, c("mPath","monte_carlo"))
 	out <- parLapply(cl, 1:100, monte_carlo)
 	stopCluster(cl)
-	save(out, file='pgbme_sim_results.rda')
+	save(out, file='pgbme_sim_results.rda') ; rm(out)
 }
 load('pgbme_sim_results.rda')
 ################################
