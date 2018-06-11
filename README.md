@@ -10,7 +10,7 @@ The replication archive is organized into four directories:
 - vignette: provides a brief introduction to the P-GBME model we introduce in this paper
 - PA_submission: includes .tex and .pdf versions of the paper
 
-The main directory contains four scripts that should be run in the following order: 
+The main directory contains four scripts that should be run in the following order (before running any of the scripts please modify the path to match your local environment, the path is specified in line 2 on each of the scripts): 
 
 - 0_imputeData.R: Imputes missing data among the covariates using `sbgcop`.
     + This should take only a few minutes to run and is run in parallel across two cores.
