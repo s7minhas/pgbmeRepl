@@ -54,7 +54,7 @@ if(!all(paste0('results2012_k', 1:3, '.rda') %in% list.files())){
 		est <- pgbme(
 			y = y, Xd = xDyad, Xs = xNode, Xr = xNode, 
 			k = rank, rho.calc = FALSE,
-			NS = 4e+4, burn = 2e+4, odens = 20, 
+			NS = 2e+4, burn = 1e+4, odens = 10, 
 			xInclImpList=FALSE, seed=6886
 			)
 		save(est, file=paste0('results2012_k',rank,'.rda'))

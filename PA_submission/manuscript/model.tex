@@ -1,0 +1,32 @@
+\section{The Model}
+
+Building on the random utility framework \citep{mcfadden:1980}, we model an actor $i = 1, \ldots,  N$ as having net utility from forming a tie with another $j$: $z_{ij} = \mu_{ij} + \epsilon_{ij}$ with $\mu_{ij}$ representing the systematic component (that depends on observables) and $\epsilon_{ij}$ representing the stochastic error. To account for interdependencies in actors' utilities from having ties, we use the ``latent space'' approach \citep{hoff:2005} and model these utilities as follows:
+\begin{align}    
+\left ( \begin{array}{c}
+         z_{ij} \\
+         z_{ji} \end{array} \right ) 
+         & \sim \mathcal{N}
+        \left ( \begin{array}{c}
+         \mu_{ij} + a_i + b_j +    \bm{u}'_i\bm{v}_j  \\
+         \mu_{ji} + a_j + b_i +  \bm{u}'_j\bm{v}_i \end{array}, \left [ \begin{array}{cc}
+        \sigma^2 & \rho \sigma^2 \\
+         \rho \sigma^2 & \sigma^2 \end{array} \right] \right ). \label{eq:modz}
+\end{align}
+The correlation, $\rho$, captures the ``reciprocity'' between the utilities that actors derive from tie formation. Parameters $a_i$ and $b_j$ are sender- and receiver-specific random effects, respectively, and they capture second-order network dependencies. The vectors $\bm{u}_i$ and $\bm{v}_i$ represent the location of actor $i$ in the latent space of `senders' and `receivers,' respectively. These random effects capture higher-order dependencies in network ties: $i$ derives a large utility from forming a tie with $j$, if $i$'s location in the latent space of `senders' $\bm{u}_i$ is close to $j$'s location in the latent space of `receivers' $\bm{u}_j$ (so that the cross-product $\bm{u}'_i\bm{v}_j$ is large).\footnote{As in previous literature, these random effects are modeled as $(a_i, b_i) \sim \mathcal{N}(0, \bm{\Sigma_{ab}})$, $\bm{u}_i \sim \mathcal{N}_K(\bm{0}, \sigma_u^2\bm{I})$, and $\bm{v}_i \sim \mathcal{N}_K(\bm{0}, \sigma_v^2\bm{I})$, where $\bm{\Sigma_{ab}}$, $\sigma_u^2$, and $\sigma_v^2$ are unknown parameters. The choice of $K$, dimensionality of the latent space, is discussed supplementary materials.} We express the systematic components of actors' utilities as linear functions of predictors:
+\begin{align}
+    \mu_{ij} & = \bm{\beta}^{(s)}\bm{x}_i^{(s)} + \bm{\beta}^{(r)}\bm{x}_j^{(r)} + \bm{\beta}^{(d)}\bm{x}_{ij}^{(d)}, \label{eq:itoj}\\
+    \mu_{ji} & = \bm{\beta}^{(s)}\bm{x}_j^{(s)} + \bm{\beta}^{(r)}\bm{x}_i^{(r)} + \bm{\beta}^{(d)}\bm{x}_{ji}^{(d)} \label{eq:jtoi}.
+\end{align}
+
+A researcher cannot directly observe net utility (the $z$'s).  We only observe agents' behaviors, in this case undirected \emph{bilateral} ties. A directional tie $i \to j$ is formed if and only if $i$'s net gain from doing so is strictly positive, $z_{ij} > 0$.  Accordingly, the bilateral tie $i \leftrightarrow j$ is formed if and only if \emph{both} actors derive a net positive payoff from having a tie so that $z_{ij} > 0$ and $z_{ji} > 0$. A researcher observes an undirected (bilateral) tie $y_{ij} = y_{ji} = \{0, 1\}$ arising from the following data generating process:
+\begin{align}
+y_{ij} = y_{ji} & =   \left\{ \begin{array}{ll}
+         1 & \mbox{if $z_{ij} > 0$ and $z_{ji} > 0$},\\
+         0 & \mbox{else}.\end{array} \right. \label{mod:y}
+\end{align}
+
+Under a standard identifying restriction $\sigma^2 = 1$, the model is a partially observable probit regression \citep{poirier:1980}, augmented with random-effects to capture unobserved heterogeneity and inter-dyadic dependencies. Vectors $\bm{x}_i^{(s)}$ and $\bm{x}_i^{(r)}$ represent the sender-specific and receiver-specific covariates, respectively. A model for the directional link $i \to j$ (eq. \ref{eq:itoj}), uses variables $\bm{x}_i$ as sender-specific predictors, but these same predictors become receiver-specific in the model for the directional link $j \to i$ (eq. \ref{eq:jtoi}). Vector $\bm{x}_{ij}^{(d)}$ contains dyad-specific variables. These dyad-specific variables might be symmetric, $x_{ij} = x_{ji}$ (e.g., distance between countries), or not (e.g., export-import).
+
+A partially observed probit model requires at least one of the following identifying restrictions: (1) regression equations \ref{eq:itoj} and \ref{eq:jtoi} must have the same parameters and/or (2) one equation contains a predictor not included in another equation \citep{poirier:1980}. If the dyadic predictors are asymmetric, $\bm{x}_{ij} \neq \bm{x}_{ji}$, then condition (2) is satisfied. Furthermore, regression equations \ref{eq:itoj} and \ref{eq:jtoi} have the same parameters, and so condition (1) holds as well; thus, the above model is parametrically identified. However, we impose an additional restriction that $\rho = 0$. While this restriction is not required for parametric identification, \citet{rajbhandari:2014} showed that finite sample estimates of $\rho$ are sensitive to the starting values and generally cannot be treated as reliable.\footnote{The estimation algorithm provided with this paper allows $\rho$ to be estimated, but caution should be used when utilizing this option.}
+ 
+We estimate the model in a Bayesian framework using Markov chain Monte Carlo.  In the supplemental materials give a more detailed exposition of the model, prior assumptions, the sampling algorithm. We also provide results from a simulation study demonstrating that the model successfully recovers known parameter values.

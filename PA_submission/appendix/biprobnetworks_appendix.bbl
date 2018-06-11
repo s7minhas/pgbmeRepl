@@ -1,0 +1,69 @@
+\begin{thebibliography}{xx}
+
+\harvarditem[Gelfand, Sahu \harvardand\ Carlin]{Gelfand, Sahu \harvardand\
+  Carlin}{1995}{gelfand:etal:1995}
+Gelfand, Alan~E., Sujit~K. Sahu \harvardand\ Bradley~P. Carlin. 1995.
+\newblock ``Efficient parametrisations for normal linear mixed models.'' {\em
+  Biometrika} 82(3):479--488.
+
+\harvarditem{Gleditsch \harvardand\ Ward}{2001}{gleditsch:ward:2001}
+Gleditsch, Kristian~S. \harvardand\ Michael~D. Ward. 2001.
+\newblock ``Measuring Space: {A} Minimum Distance Database and Applications to
+  International Studies.'' {\em Journal of Peace Research} 38(6):749--768.
+
+\harvarditem{Hoff}{2009}{hoff:2009}
+Hoff, Peter. 2009.
+\newblock ``Multiplicative Latent Factor Models for Description and Prediction
+  of Social Networks.'' {\em Computational and Mathematical Organization
+  Theory} 15(4):261--272.
+
+\harvarditem{Hoff}{2005}{hoff:2005}
+Hoff, Peter~D. 2005.
+\newblock ``Bilinear Mixed-Effects Models for Dyadic Data.'' {\em Journal of
+  the American Statistical Association} 100(4690):286--295.
+
+\harvarditem{Hoff}{2007}{hoff:2007a}
+Hoff, Peter~D. 2007.
+\newblock ``sbgcop: {S}emiparametric Bayesian Gaussian copula estimation and
+  imputation.'' R Package.
+
+\harvarditem[Hollenbach et~al.]{Hollenbach, Bojinov, Minhas, Metternich, Ward
+  \harvardand\ Volfovsky}{2016}{hollenbach:etal:2016a}
+Hollenbach, Florian~M., Iavor Bojinov, Shahryar Minhas, Nils~W. Metternich,
+  Michael~D. Ward \harvardand\ Alexander Volfovsky. 2016.
+\newblock ``Principled Imputation Made Simple: {M}ultiple Imputation Using
+  Gaussian Copulas.'' {\em Working Paper} .
+
+\harvarditem[Jandhyala, Henisz \harvardand\ Mansfield]{Jandhyala, Henisz
+  \harvardand\ Mansfield}{2011}{jandhyala:etal:2011}
+Jandhyala, Srividya, Witold~J. Henisz \harvardand\ Edward~D. Mansfield. 2011.
+\newblock ``Three waves of {BITs}: {T}he global diffusion of foreign investment
+  policy.'' {\em Journal of Conflict Resolution} 55(6):1047--1073.
+
+\harvarditem[King et~al.]{King, Honaker, Joseph \harvardand\
+  Scheve}{2001}{king:etal:2001}
+King, Gary, James Honaker, Anne Joseph \harvardand\ Kenneth Scheve. 2001.
+\newblock ``Analyzing Incomplete Political Science Data: {A}n Alternative
+  Algorithm for Multiple Imputation.'' {\em American Political Science Review}
+  95(1):49--69.
+
+\harvarditem[Pemstein, Meserve \harvardand\ Melton]{Pemstein, Meserve
+  \harvardand\ Melton}{2010}{pemstein:etal:2010}
+Pemstein, Daniel, Steven~A. Meserve \harvardand\ James Melton. 2010.
+\newblock ``Democratic Compromise: {A} Latent Variable Analysis of Ten Measures
+  of Regime Type.'' {\em Political Analysis} 18(4):426--449.
+
+\harvarditem{Rajbhandari}{2014}{rajbhandari:2014}
+Rajbhandari, Ashish. 2014.
+\newblock Identification and MCMC Estimation of Bivariate Probit Models with
+  Partial Observability.  In {\em Bayesian Inference in the Social Sciences},
+  ed. Ivan Jeliazkov \harvardand\ Xin-She Yang.
+\newblock Wiley.
+
+\harvarditem{Weidmann \harvardand\ Gleditsch}{2015}{weidmann:gleditsch:2015}
+Weidmann, Nils~B. \harvardand\ Kristian~Skrede Gleditsch. 2015.
+\newblock {\em \texttt{cshapes}: {CShapes} Dataset and Utilities}.
+\newblock $\mathcal{R}$ package version 0.5-1.
+\newline\harvardurl{https://CRAN.R-project.org/package=cshapes}
+
+\end{thebibliography}

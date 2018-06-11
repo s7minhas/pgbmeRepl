@@ -98,7 +98,7 @@ if(!all(paste0('results', pds, '.rda') %in% list.files())){
 			xInclImpList=TRUE, 
 			Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
 			k = 2, rho.calc = FALSE,
-			NS = 4e+4, burn = 2e+4, odens = 20,
+			NS = 2e+4, burn = 1e+4, odens = 10,
 			seed=6886
 			)
 

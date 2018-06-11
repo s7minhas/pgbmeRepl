@@ -1,0 +1,146 @@
+\documentclass[a4paper, 12pt]{article}
+
+% Fonts
+%\usepackage[default,osfigures,scale=0.95]{opensans}
+%\usepackage[T1]{fontenc}
+%\usepackage{textcomp}
+%\usepackage[varqu,varl]{zi4}% inconsolata typewriter
+\usepackage{amsmath,amsthm}
+%\usepackage[cmintegrals]{newtxsf}
+%\usepackage{ae}
+
+\usepackage{etex}
+\usepackage{bm, bbm}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{natbib}
+\usepackage{epsfig}
+\usepackage{pdflscape}
+\usepackage{sectsty}
+\usepackage{graphicx}
+\usepackage[margin=1in, nohead]{geometry}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\captionsetup{font={stretch=.5}}
+%\usepackage{authblk}
+\usepackage{dcolumn}
+%\usepackage{floatrow}
+\usepackage{booktabs}
+\usepackage{xr}
+\usepackage{soul}
+\usepackage{calc}
+\usepackage{epigraph}
+\usepackage{enumitem}
+\usepackage{abstract}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{calc}
+\usepackage{footmisc}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{placeins}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{d}[1]{D{.}{.}{#1}}
+
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty} % originally center
+
+\renewcommand*\rmdefault{ppl}
+
+\setlist[itemize]{leftmargin=*}
+\renewcommand{\footnotelayout}{\raggedright}
+
+\titlelabel{\thetitle.\quad}
+\titleformat*{\section}{\centering\scshape\large}
+\titleformat*{\subsection}{\centering\itshape}
+\titleformat{\subsubsection}[runin]{\bfseries}{\thesubsubsection}{1em}{}
+
+\renewcommand{\abstractname}{}
+\renewcommand{\absnamepos}{empty}
+
+\graphicspath{{./}}
+
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\hypersetup{
+    colorlinks,%
+    citecolor=brown,%
+    filecolor=blue,%
+    linkcolor=blue,%
+    urlcolor=black
+}
+
+\graphicspath{{figures/}}
+
+\renewcommand{\abstractname}{\vspace{-\baselineskip}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{hypothesis}{Hypothesis}
+\newtheorem{prediction}{Prediction}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{corollary}{Corollary}
+\DeclareMathOperator{\sign}{sign}
+
+\newcommand{\I}{\mathbbm{1}}
+\newcommand{\E}{\mathbbm{E}}
+\newcommand{\R}{\mathbbm{R}}
+
+\newcommand{\mc}[2]{\multicolumn{#1}{c}{#2}}
+\allsectionsfont{\raggedright\mdseries}\subsectionfont{\raggedright\itshape\mdseries}
+ 
+\usetikzlibrary{fit,positioning}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{calc}
+
+\begin{document}
+
+\title{{\bf Modeling Asymmetric Relationships from Symmetric Networks}}
+
+\author{
+  Arturas Rozenas\\
+{\small NYU}\\
+  {\small \texttt{ar199@nyu.edu}}
+\and
+  Shahryar Minhas\\
+{\small MSU}\\
+  {\small \texttt{minhassh@msu.edu}}
+  \and
+  John Ahlquist\\
+{\small UCSD}\\
+  {\small \texttt{jahlquist@ucsd.edu}}
+\thanks{Versions of this paper were presented at the 2015 meetings of the International Political Economy Society, the 2016 meetings of the Society for Political Methodology, and WardFest.  We thank James Fowler, Jenn Larson, and Mike Ward for useful comments. Micah Dillard provided excellent research assistance.  Ahlquist benefitted from a fellowship at Stanford's Center for Advanced Study in the Behavioral Sciences during the writing of this paper.  See \citet{rozenas:etal:data} for code to estimate the P-GBME model as well as files needed to replicate the analysis in the paper.  All output files from the MCMC are available at \url{https://www.dropbox.com/sh/4biqr8uxskaeni9/AABbtwLIpOI9ms0su4sF-HXja?dl=0}.}}
+
+\maketitle 
+\thispagestyle{empty}
+
+\bigskip
+
+\begin{abstract}
+ \noindent Many bilateral relationships requiring mutual agreement produce observable networks that are symmetric (undirected). However, the unobserved, asymmetric (directed) network is frequently the object of scientific interest. We propose a method that probabilistically reconstructs the latent, asymmetric network from the observed, symmetric graph in a regression-based framework. We apply this model to the bilateral investment treaty network. Our approach successfully recovers the true data generating process in simulation studies, extracts new, politically relevant information about the network structure inaccessible to alternative approaches, and has superior predictive performance. 
+\end{abstract}
+
+\clearpage
+
+\singlespacing
+
+\input{intro}
+\input{model}
+\input{application}
+\input{conclusion}
+
+%\clearpage
+\singlespacing
+\bibliographystyle{apsr}
+\bibliography{master}
+
+
+\end{document}

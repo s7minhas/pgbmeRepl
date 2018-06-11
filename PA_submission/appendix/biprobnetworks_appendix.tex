@@ -1,0 +1,380 @@
+\documentclass[a4paper, 12pt]{article}
+
+% Fonts
+\usepackage[default,osfigures,scale=0.95]{opensans}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[varqu,varl]{zi4}% inconsolata typewriter
+\usepackage{amsmath, amsthm, amssymb}
+%\usepackage[cmintegrals]{newtxsf}
+\usepackage{ae}
+\usepackage{rotating}
+\usepackage{etex}
+\usepackage{bm, bbm}
+\usepackage{mathtools}
+\usepackage{natbib}
+\usepackage{epsfig}
+\usepackage{pdflscape}
+\usepackage{sectsty}
+\usepackage{graphicx}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{caption}
+\captionsetup{font={stretch=.5}}
+%\usepackage{authblk}
+\usepackage{dcolumn}
+%\usepackage{floatrow}
+\usepackage{booktabs}
+\usepackage{xr}
+\usepackage{soul}
+\usepackage{calc}
+\usepackage{epigraph}
+\usepackage{enumitem}
+\usepackage{abstract}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{calc}
+\usepackage{footmisc}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage{placeins}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{d}[1]{D{.}{.}{#1}}
+
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty} % originally center
+
+\renewcommand*\rmdefault{ppl}
+
+\setlist[itemize]{leftmargin=*}
+\renewcommand{\footnotelayout}{\raggedright}
+
+\titlelabel{\thetitle.\quad}
+\titleformat*{\section}{\centering\scshape\large}
+\titleformat*{\subsection}{\centering\itshape}
+\titleformat{\subsubsection}[runin]{\bfseries}{\thesubsubsection}{1em}{}
+
+\renewcommand{\abstractname}{}
+\renewcommand{\absnamepos}{empty}
+
+\graphicspath{{./}}
+
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+\hypersetup{
+    colorlinks,%
+    citecolor=brown,%
+    filecolor=blue,%
+    linkcolor=blue,%
+    urlcolor=black
+}
+
+\graphicspath{{figures/}}
+
+\renewcommand{\abstractname}{\vspace{-\baselineskip}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{hypothesis}{Hypothesis}
+\newtheorem{prediction}{Prediction}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{corollary}{Corollary}
+\DeclareMathOperator{\sign}{sign}
+
+\newcommand{\I}{\mathbbm{1}}
+\newcommand{\E}{\mathbbm{E}}
+\newcommand{\R}{\mathbbm{R}}
+
+\newcommand{\mc}[2]{\multicolumn{#1}{c}{#2}}
+\allsectionsfont{\raggedright\mdseries}\subsectionfont{\raggedright\itshape\mdseries}
+ 
+\usetikzlibrary{fit,positioning}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{calc}
+
+\begin{document}
+
+\title{Supplemental Material \\ {\bf Modeling Asymmetric Relationships from Symmetric Networks}}
+
+\author{
+  Arturas Rozenas\\
+{\small NYU}\\
+  {\small \texttt{arturas.rozenas@nyu.edu}}
+\and
+  Shahryar Minhas\\
+{\small MSU}\\
+  {\small \texttt{minhassh@msu.edu}}
+\and
+ John Ahlquist\\
+{\small UCSD}\\
+  {\small \texttt{jahlquist@ucsd.edu}}
+}
+
+\date{~}
+\maketitle
+
+\bigskip
+
+\tableofcontents
+
+\clearpage
+
+\doublespacing
+\section{Details on the P-GBME}
+
+As detailed in the paper, the partial observability generalized bilinear mixed effects (P-GBME) framework treats the observed symmetric outcome, $y_{ij} = y_{ji}$, as resulting from a joint decision taken by a pair of actors. We formalize the joint decision making process using a bivariate probit model with a standard normal link function:
+
+\begin{align}
+y_{ij} = y_{ji} & =   \left\{ \begin{array}{ll}
+         1 & \mbox{if $z_{ij} > 0$ and $z_{ji} > 0$},\\
+         0 & \mbox{else},\end{array} \right. \label{mod:y}\\
+    \left ( \begin{array}{c}
+         z_{ij} \\
+         z_{ji} \end{array} \right ) 
+         & \sim \mathcal{N}
+        \left ( \begin{array}{c}
+         \mu_{ij} + a_i + b_j +    \bm{u}'_i\bm{v}_j  \\
+         \mu_{ji} + a_j + b_i +  \bm{u}'_j\bm{v}_i \end{array}, \left [ \begin{array}{cc}
+        \sigma^2 & \rho \sigma^2 \\
+         \rho \sigma^2 & \sigma^2 \end{array} \right] \right ), \label{eq:modz}\\
+        (a_i, b_i)' & \sim \mathcal{N}\left(\bm{0}, \bm{\Sigma}_{ab} \right),\\
+         \bm{u}_i & \sim \mathcal{N}_K(\bm{0}, \sigma_u^2\bm{I}),\\
+         \bm{v}_i & \sim \mathcal{N}_K(\bm{0}, \sigma_v^2\bm{I})\label{eq:modv}.
+\end{align}
+
+$a_{i}$ and $b_{j}$ represent sender and receiver random effects that account for first order dependence patterns that often arise in relational data, while $\bm{u}'_i\bm{v}_j$ captures the likelihood of a pair of actors interacting with one another based on third order dependence patterns such as transitivity, balance, and clustering. For identification purposes, we fix $\sigma^2=1$ and $\rho=0$. The former is a standard restriction in probit frameworks with a binary outcome. We undertake the latter restriction because \citet{rajbhandari:2014} shows that in this framework it is difficult to recover reliable estimates for $\rho$ as the parameter is highly sensitive to the initial value. 
+
+The sender and receiver random effects ($a_{i}$ and $b_{j}$) are drawn from a multivariate normal distribution centered at zero with a covariance matrix, $\Sigma_{ab}$, parameterized as follows:
+
+\begin{align}
+  \Sigma_{ab} = \begin{pmatrix} \sigma_{a}^{2} & \sigma_{ab} \\ \sigma_{ab} & \sigma_{b}^2   \end{pmatrix}
+\end{align}
+
+The nodal effects are modeled in this way to account for the fact that in many relational datasets we often find that actors who send a lot of ties are also more likely to receive a lot of ties. Heterogeneity in the the sender and receiver effects is captured by $\sigma_{a}^{2}$ and $\sigma_{b}^{2}$, respectively, and $\sigma_{ab}$ describes the covariance between these two effects. 
+
+$\mu$ represents the systematic component of actors' utilities and is expressed as a linear function of sender $^{(s)}$, receiver $^{(r)}$, and dyadic $^{(d)}$ covariates: 
+
+\begin{align}
+    \mu_{ij} & = \bm{\beta}^{(s)}\bm{x}_i^{(s)} + \bm{\beta}^{(r)}\bm{x}_j^{(r)} + \bm{\beta}^{(d)}\bm{x}_{ij}^{(d)}, \label{eq:itoj}\\
+    \mu_{ji} & = \bm{\beta}^{(s)}\bm{x}_j^{(s)} + \bm{\beta}^{(r)}\bm{x}_i^{(r)} + \bm{\beta}^{(d)}\bm{x}_{ji}^{(d)} \label{eq:jtoi}.
+\end{align}
+
+This formulation allows us to incorporate exogenous actor and dyad level characteristics into how actors make decisions within the partial probit framework. Following \citet{hoff:2005}, to enable a more efficient estimation, we reparameterize the model to implement hierarchical centering of the random effects \citep{gelfand:etal:1995}:
+
+\begin{align}
+  z_{i,j} & \approx \mathcal{N}(\bm{\beta}^{(d)}\bm{x}_{ij}^{(d)} + s_{i} + r_{j} + \bm{u}'_i\bm{v}_j), \\
+  s_{i} & = \bm{\beta}^{(s)}\bm{x}_i^{(s)} + a_{i}, \\
+  r_{j} & = \bm{\beta}^{(s)}\bm{x}_j^{(r)} + b_{j}.
+\end{align}
+
+\subsection{Parameters and Priors}
+
+% The parameters to be estimated are: $Z$, $\bm{\beta}^{(s)}$, $\bm{\beta}^{(r)}$, $\bm{\beta}^{(d)}$, $\bm{a}$, $\bm{b}$, $\Sigma_{ab}$, $\bm{U}$, $\bm{V}$, $\sigma_u^2$, and $\sigma_v^2$. $\bm{a}$ and $\bm{b}$ are $n$ length vectors and $\bm{U}$ and $\bm{V}$ are $n \times K$ matrices designating the positions of actors in a latent sender and receiver space.
+
+To estimate the parameters discussed in the previous section, we utilize conjugate priors and a Monte Carlo Markov Chain (MCMC) algorithm. Prior distributions for the parameters are specified as follows:\footnote{For details on the full conditional distributions of each of the parameters see \citet{hoff:2005}.} 
+
+\begin{itemize}
+  \item $\bm{\beta}^{(s)}$, $\bm{\beta}^{(r)}$, and $\bm{\beta}^{(d)}$ are each drawn from multivariate normals with mean zero and a covariance matrix in which the covariances are set to zero and variances to 10
+  \item $\Sigma_{a,b} \sim \text{ inverse Wishart}(I_{2\times 2}, 4)$
+  \item $\sigma_u^2$, and $\sigma_v^2$ are each drawn from an i.i.d. inverse gamma(1,1).
+\end{itemize}
+
+Starting values for each of the parameters are determined using maximum likelihood estimation.
+
+\subsection{The MCMC algorithm}
+
+To estimate this model a Gibbs sampler is used. This sampler follows the procedure laid out in \citet{hoff:2005,hoff:2009} with the exception of the first step in which we extend the GBME by accounting for the possibility that seemingly symmetric events are the result of a joint decision between a pair of actors. This first step involves sampling from a truncated normal distribution, we show the full conditional distribution below.
+
+\begin{enumerate}
+  \item Modeling partially observable outcome. Conditional on there being an observed link between $i$ and $j$, and conditional on other parameters, we draw the latent variables $z_{ij}$ and $z_{ji}$ from the bivariate normal distribution such that both latent variables are positive:
+\begin{align*}
+\left(
+\begin{matrix}
+  z_{ij} \hfill \\   z_{ji}
+\end{matrix}
+\, \middle\vert \,
+y_{ij} = 1
+\right) & \sim \mathcal{N}
+        \left ( \begin{array}{c}
+         \mu_{ij} + a_i + b_j +    \bm{u}'_i\bm{v}_j  \\
+         \mu_{ji} + a_j + b_i +  \bm{u}'_j\bm{v}_i \end{array}, \left [ \begin{array}{cc}
+        \sigma^2 & \rho \sigma^2 \\
+         \rho \sigma^2 & \sigma^2 \end{array} \right] \right )\I\{z_{ij} > 0 \cap z_{ji} > 0\}.
+\end{align*}
+Conditional $y_{ij} = 0$ (there is no observed link between $i$ and $j$), we sample the latent variables from the bivariate normal distribution where at least one of the latent variables, $z_{ij}$ or $z_{ji}$, is constrained to be negative:
+\begin{align*}
+\left(
+\begin{matrix}
+  z_{ij} \hfill \\   z_{ji}
+\end{matrix}
+\, \middle\vert \,
+y_{ij} = 0
+\right) & \sim \mathcal{N}
+        \left ( \begin{array}{c}
+         \mu_{ij} + a_i + b_j +    \bm{u}'_i\bm{v}_j  \\
+         \mu_{ji} + a_j + b_i +  \bm{u}'_j\bm{v}_i \end{array}, \left [ \begin{array}{cc}
+        \sigma^2 & \rho \sigma^2 \\
+         \rho \sigma^2 & \sigma^2 \end{array} \right] \right )\I\{z_{ij} < 0 \cup z_{ji} < 0\}.
+\end{align*}
+  \item Additive effects
+  \begin{itemize}
+    \item Sample $\bm{\beta}^{(d)}, s, r \;|\; \bm{\beta}^{(s)}, \bm{\beta}^{(r)}, \Sigma_{a,b}, Z, \bm{U}, \bm{V}$ (linear regression)
+    \item Sample $\bm{\beta}^{(s)}, \bm{\beta}^{(r)} \;|\; s, r, \Sigma_{a,b}$ (linear regression)
+    \item Sample $\Sigma_{a,b}$ from full conditional distribution
+  \end{itemize}
+  \item Multiplicative effects\footnote{See \citet{hoff:2009} for further details on how multiplicative effects are estimated in a directed context within the GBME framework. }
+  \begin{itemize}
+    \item For $i = 1, \ldots, n$:
+    \begin{itemize}
+      \item Sample $u_{i} \;|\; \{u_{j}, j \neq i\}, Z, \bm{\beta}^{(d)}, s, r, \sigma_u^2, \sigma_v^2, \bm{V}$ (linear regression)
+      \item Sample $v_{i} \;|\; \{v_{j}, j \neq i\}, Z, \bm{\beta}^{(d)}, s, r, \sigma_u^2, \sigma_v^2, \bm{U}$ (linear regression)
+    \end{itemize}
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Simulation Exercise}
+
+To test the capabilities of the P-GBME framework in representing the data generating process for a partially observable outcome we conduct a simulation exercise. In each simulation, we randomly construct a directed network from a pair of dyadic covariates, nodal covariates, and the random effects structure detailed in the previous section. The regression parameters for the dyadic covariates are set at 1 and -1/2, and the parameters for the nodal covariates are set at 0 and 1/2. At this stage, the network simulated from this data generating process is directed. We modify the simulated network so that a link between a dyad only appears in the network if both the $i,j$ dyad and the $j,i$ dyad both have a link in the simulated network, thus making the network appear undirected. 
+
+Next, we examine whether the P-GBME model can recover the data generating process underlying the partially observed simulated network. We run the P-GBME model in every simulation for 20,000 iterations with a 10,000 burn-in period. We repeat this simulation process 100 times.
+
+With the simulation results our first step is to examine whether the P-GBME accurately recovers the regression parameter estimates for the dyadic and nodal covariates. To test whether this is the case we calculate the mean regression parameter estimate from the MCMC results for each simulation, and we summarize these results in Figure~\ref{fig:simBias}. For each parameter we indicate its true value by a colored horizontal line and summarize the distribution of the mean regression values estimated from the P-GBME using a boxplot. Given that for each of the parameters the true value almost exactly crosses the median value indicated in the box plot, this simulation shows that the P-GBME is quite effective in estimating the true parameter values underlying a partially observed outcome. 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=1\textwidth]{figureA1.pdf}
+  \caption{Boxplot of mean value of regression parameters estimated using the P-GBME across 100 simulations. Horizontal colored lines indicate the true parameter values.}
+  \label{fig:simBias}
+\end{figure}
+\FloatBarrier
+
+We also examine the proportion of times that the true value falls within the 95\% credible interval of the estimated regression parameter. In over ninety percent of the simulations, the true value falls within the 95\% credible interval of each of the estimated regression parameters from the P-GBME. Specifically, for $\beta^{(d,1)}$ the coverage rate is 0.88, for $\beta^{(d,2)}$ 0.94, for $\beta^{(s)}$ 0.91, and for $\beta^{(r)}$ 0.90.
+
+\section{Estimation and Application}
+
+\subsection{Data}
+
+Table~\ref{tab:vars} provides a description for each of the variables used in the analysis.
+
+% \begin{sidewaystable}[ht]
+\begin{table}[ht]
+\footnotesize
+  \centering
+  \caption{Variables in the analysis}\label{tab:modelSpec}
+  \begin{tabular}{llp{7cm}p{4cm}}  
+  % \begin{tabular}{llp{9cm}p{5cm}}  
+    \toprule
+    Variable & Level & Definition & Source \\
+    \midrule
+    BIT & dyadic & $1$ if $i$ \& $j$ Signed a BIT by year $t$ & UNCTAD\footnote{\url{http://investmentpolicyhub.unctad.org/IIA}}\\
+    UDS (median) & dyadic & $|$UDS$_{it} - $UDS$_{jt}|$ &Pemstein et al. (2010)\nocite{pemstein:etal:2010}  \\
+    Law \& Order & dyadic  &$|$LO$_{it} - $LO$_{jt}|$& ICRG\footnote{\url{http://epub.prsgroup.com/products/international-country-risk-guide-icrg}}\\
+    Log(GDP per capita)  &dyadic& $|$Log(GDPcap)$_{it} - $Log(GDPcap)$_{jt}|$ & WDI \\
+    OECD & dyadic& $1$ if $i$\& $j$ Both OECD members by year $t$&OECD \\
+    Distance &dyadic&Minimum distance between $i$\&$j$ & Gleditsch \& Ward (2001) \nocite{gleditsch:ward:2001}\footnote{Also see \citet{weidmann:gleditsch:2015}.}\\
+    FDI/GDP &node&Net FDI inflow as \% GDP in year $t$&WDI\\
+    ICSID Disputes &node& Cumulative number of disputes by year $t$& ICSID\footnote{\url{https://icsid.worldbank.org/en/Pages/cases/AdvancedSearch.aspx}} \\
+    GDP per capita growth&node& Level of GDP per capita growth by year $t$ &WDI\\ 
+    PTAs&node& Cumulative number of PTAs signed by year $t$& DESTA\footnote{\url{https://www.designoftradeagreements.org/}}\\
+    \bottomrule
+  \end{tabular}
+  \label{tab:vars}
+\end{table}
+% \end{sidewaystable}
+\FloatBarrier
+
+A shortcoming of the existing GBME framework is its inability to account for applications where there is missingness in the set of exogenous covariates used in the model. For our application, a number of the nodal covariates had varying levels of missingness. Additionally, most of the dyadic covariates that we construct from nodal variables, such as the unified democracy scores, also have varying levels of missingness. The table below shows how much missingness we had for the variables included in our analysis: 
+
+\begin{table}[ht]
+  \centering
+  \caption{Missingness among variables used in the analysis}
+  \begin{tabular}{lc}
+  \toprule
+  Variable & Proportion of Cases Missing \\
+    \midrule
+    Law \& Order & 16.6\% \\ 
+    FDI/GDP & 2.8\% \\
+    GDP per capita & 1.4\% \\
+    GDP per capita growth & 1.4\% \\
+    Unified Democracy Scores (UDS) & 0.7\% \\
+    ICSID Disputes & 0\% \\
+    PTAs & 0\% \\   
+    OECD & 0\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+\FloatBarrier
+
+In general, the level of missingness is not high. The only exception here is with the Law \& Order variable from the ICRG dataset, for this variable we had approximately 17\% of country-year observations missing from 1990 to 2012. The only true dyadic variable we include in our analysis is a calculation of the minimum distance between countries, and this variable has no missingness. Additionally, our dependent variable measuring whether or not two countries had signed a BIT by year $t$ also has no missingness. 
+
+A number of works have noted the issues that can arise when simply using listwise deletion,\footnote{See, for example, \citet{king:etal:2001}.} thus before running the P-GBME sampler we impute missingness among the covariates used in our model with a Bayesian, semi-parametric copula imputation scheme.\footnote{See \citet{hoff:2007a,hollenbach:etal:2016a} for details on this imputation scheme and how it differs from other approaches frequently utilized in political science.} We generate 1,000 imputed datasets from this imputation scheme and save the last 500 for use in the P-GBME MCMC sampler.
+
+To account for missingness within the P-GBME, at the beginning of every iteration of the MCMC for model, we draw a randomly sampled imputed dataset from the posterior of the Copula, calculate the parameters associated with the P-GBME using the imputed dataset, and repeat this process for every iteration of the sampler for the model. This approach directly incorporates imputation uncertainty into our posterior distributions of the P-GBME parameters without having to run and combine separate models. 
+
+\subsection{Estimation details}
+
+In our application we estimate the P-GBME separately for each year from 1990 to 2012 using the prior distributions and MCMC algorithm described above.  For each year, we ran the P-GBME MCMC sampler for 300,000 iterations, discarding the first 150,000 iterations as burn-in. We thinned the chain by saving only every 100$^{th}$ value. 
+
+The following trace plot describes MCMC convergence for all parameters in the 2012 P-GBME model.  
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{figureA2}
+\caption{Traceplot for 2012 P-GBME results.}
+\label{fig:trace}
+\end{figure}
+\FloatBarrier
+
+\subsection{Regression Parameters}
+
+Figure~\ref{fig:coef} displays the posterior mean and the 90\% (thicker) and 95\% (thinner)  credible intervals (CIs). The first column contains the dyadic covariates; the second, sender-level covariates; and, the third, receiver covariates. In each panel, we show the parameter estimates for that variable from 1990 to 2012.  The dotted horizontal line is $0$ and the thicker grey line is the posterior mean, pooling the posterior draws across all years.   
+
+The P-GBME recovers directed sender- and receiver-effects for node-level covariates from an observed undirected network, something that other approaches, including the GBME, are unable to do. Our estimation in this application indicates substantial instability in these estimates over time, both relative to a baseline of $0$ and relative to the pooled posterior mean.  This instability is consistent with substantive arguments that the incentives to sign BITs have changed over time \citep{jandhyala:etal:2011}. 
+
+% \clearpage
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=1\textwidth]{figureA3.pdf}
+  \caption{Left-most plot shows results by year for the dyadic parameters, next shows parameter results for sender covariates, and right-most plot show results for receiver covariates. Points in each of the plots represents the average effect for the parameter and the width the 90 and 95\% credible intervals. The grey bar in the panels represents the average effect of the parameter across all years. Dark shades of blue and red indicate that the 95\% CI does not contain 0 and lighter shades implies that the $0$ is not in the 90\% credible interval. Parameters in grey are are ones where 0 is inside the 90\% credible interval.} 
+  \label{fig:coef}
+\end{figure}
+
+Dyadic covariates tend to be more stable across years in this application.  But they, too, show that the BIT formation process has changed over time.  Economic and political ``distance'', for example, has become less important as the network evolved and more lower-income countries have signed BITs with each other.  Geographic distance, on the other hand, continues to be strongly related to the formation of BITs.
+
+P-GBME covariate estimates shed light on the evolving processes producing the observed BIT network in the 1990-2012 period.  The changing values of covariate parameters over time also indicates that common practice of pooling dyads and assuming the existence of temporally stable parameters may be dangerous.
+
+\subsection{Choosing dimension of the multiplicative effects, $K$}
+
+One of the parameters that users are able to set within the P-GBME to account for third order dependence patterns is $K$ -- see the MCMC algorithm section above for more details on this parameter and its relation to the model. In the results reported in the paper, we set $K$ = 2. To understand whether or not a higher value of $K$ is necessary users of this approach can compare the in-sample fit of the model with varying values for $K$. In our application exercise, we varied $K$ from 1 to 3 to settle on an appropriate value of $K$ that can represent the data generating process of the network. Results are shown in Table~\ref{tab:kvar} below.
+
+\begin{table}[ht]
+\centering
+\caption{In-sample performance results from running the P-GBME on data from 2012 with varying values of $K$.}
+\label{tab:kvar}
+\begin{tabular}{lcc}
+\toprule
+~ & AUC (ROC) & AUC (PR) \\
+\midrule
+  $K$=1 & 0.86 & 0.60 \\
+  $K$=2 & 0.88 & 0.65 \\
+  $K$=3 & 0.89 & 0.66 \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+As you can see after $K$=2, the subsequent in-sample performance improvement notably declines. There is a slight increase in performance from $K$=2 to $K$=3, however, every time one increases $K$ we are also adding $2*n$ more parameters to the P-GBME model. Adding this many more parameters can easily lead one to overfit the data in an out-of-sample context. 
+
+\singlespacing
+\clearpage
+\bibliographystyle{apsr}
+\bibliography{master}
+
+\end{document}

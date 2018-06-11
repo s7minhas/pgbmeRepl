@@ -1,0 +1,68 @@
+\section{Introduction} % PA has "Introduction" title for intro section
+
+Social actors are often embedded in webs of relationships that profoundly shape political and economic outcomes \citep{franzese:hays:2008,ward:etal:2011}. One challenge in analyzing networks arises in situations where an analyst cannot fully observe the nature of relational ties. In many dyadic interactions --- treaties, marriages --- outsiders can observe ties only if both agents agree, that is, the payoff for forming a tie exceeds its cost for \emph{both} members of a dyad \citep{jackson:wolinsky:1996}. The observed network is therefore composed of symmetric (``undirected'') ties even though the social process at work contains important relational asymmetries. The pursuit of a tie by one party may not be reciprocated to the same extent by another.
+
+As an illustration, suppose $A$, $B$, and $C$ are three warring factions deciding whether to sign bilateral peace agreements. We observe a network in which dyads $(A, C)$ and $(B, C)$ have signed agreements, but the dyad $(A, B)$ continues fighting. This observed network of `peaceful' ties could be generated from any of  three unobserved sets of relations: it may be that $B$ failed to reciprocate $A$'s pursuit of peace, or vice versa, or neither $A$ nor $B$ pursued peace. To identify conditions that drive factions to sign peace agreements we must account for these unobserved asymmetries.  Here, the observed symmetric graph is an incomplete representation of the underlying, asymmetric network, which is frequently the object of scientific interest.  We refer to this situation as ``partial observability.'' 
+
+%As an illustration, suppose $A$, $B$, and $C$ are three warring factions deciding whether to sign bilateral peace agreements. The left panel of Figure \ref{fig:ntw} shows a network where dyads $(A, C)$ and $(B, C)$ sign agreements, but the dyad $(A, B)$ continues fighting. This observed network of `peaceful' ties could be generated from any of the three unobserved networks shown in the right panel of Figure \ref{fig:ntw}. It may be that $B$ failed to reciprocate $A$'s pursuit of peace, or vice versa. Or neither $A$ nor $B$ wanted peace. In order to effectively identify conditions that drive factions to form peace we must account for these unobserved relational asymmetries.  In other words, the observed symmetric network is only an incomplete representation of the underlying asymmetric network, which is frequently the object of scientific interest.  We refer to this situation as ``partial observability.'' 
+
+% \begin{figure}[h!]
+
+% \begin{tikzpicture}
+
+% \tikzstyle{main}=[circle, minimum size = 0mm, thick, draw =black!80, node distance = 6mm]
+% \tikzstyle{box}=[rectangle, draw=black!100]
+% \hspace{-.7cm}
+
+%   \node[main] (A) at (0, 2.95) {$A$} { };
+%   \node[circle, minimum size = 10mm, draw = white, node distance = 6mm, right = of A] (D) {} { };
+%   \node[main] (B) [right = of D] {$B$} { };
+%   \node[main] (C) [above = of D] {$C$} {};
+% \node[circle, minimum size = 10mm, draw = white, node distance = 0mm, above = of C] (E) {} { };
+% \draw[-, thick] (A) -- (C);
+% \draw[-, thick] (B) -- (C);
+%   \node[circle, minimum size = 10mm, draw = white, node distance = 14.5mm, below = of C] (X) {} { };
+%   \node[rectangle, inner sep=4.4mm,draw=black!100, fit= (A) (B) (C) (X) (E)] (R) {};
+% \node [above=2.7cm, align=flush center, text width=8cm] at (R) {{\bf Observed network}};     
+ 
+% \node[main] (A) at (5,2) {$A$} { };
+%   \node[circle, minimum size = 0mm, draw = white, node distance = 6mm, right = of A] (D) {} { };
+%   \node[main] (B) [right = of D] {$B$} { };
+%   \node[main] (C) [above = of D] {$C$} {};
+% \draw[-latex]  (A) to [bend left] (C);
+% \draw[-latex]  (C) to [bend left] (A);
+% \draw[-latex]  (C) to [bend left] (B);
+% \draw[-latex]  (B) to [bend left] (C);
+% \draw[-latex]  (B) to [bend left] (A);
+
+% \node[main] (A1) at (9,2) {$A$} { };
+% \node[circle, minimum size = 0mm, draw = white, node distance = 6mm, right = of A1] (D) {} { };
+% \node[main] (B1) [right = of D] {$B$} { };
+% \node[main] (C1) [above = of D] {$C$} {};
+% \draw[-latex]  (A1) to [bend left] (C1);
+% \draw[-latex]  (C1) to [bend left] (A1);
+% \draw[-latex]  (C1) to [bend left] (B1);
+% \draw[-latex]  (B1) to [bend left] (C1);
+% \draw[-latex]  (A1) to [bend right] (B1);
+
+% \node[main] (A2) at (7,4.3) {$A$} { };
+% \node[circle, minimum size = 0mm, draw = white, node distance = 6mm, right = of A2] (D) {} { };
+% \node[main] (B2) [right = of D] {$B$} { };
+% \node[main] (C2) [above = of D] {$C$} {};
+% \draw[-latex]  (A2) to [bend left] (C2);
+% \draw[-latex]  (C2) to [bend left] (A2);
+% \draw[-latex]  (C2) to [bend left] (B2);
+% \draw[-latex]  (B2) to [bend left] (C2);
+
+
+% \node[rectangle, inner sep=4.4mm,draw=black!100, fit= (A) (B) (C) (A1) (B1) (C1) (A2) (B2) (C2)] (R) {};
+%              \node [above=2.75cm, align=flush center ,text width=8cm] at (R) {{\bf Possible unobserved networks}};     
+% \end{tikzpicture}
+
+% \caption{The observed undirected network in the left panel is consistent with any of the three directed networks in the right panel, which cannot be observed.}
+% \label{fig:ntw}
+% \end{figure}
+
+We present the partial observability generalized bilinear mixed effects model (P-GBME) to address this challenge.  The model is a synthesis of the generalized bilinear mixed effects (GBME) model \citep{hoff:2005} and the bivariate or ``partial observability'' probit model \citep{poirier:1980, przeworski:vreel:2002}. The model can probabilistically reconstruct the directed network from which the observed, undirected graph emerged. The model enables the study of network ties in a regression framework by accounting for interdependencies as well as unobserved asymmetries in network relations. The stochastic actor-oriented model (SAOM) for networks \citep{snijders:pickup:2017, stadtfeld:etal:2017} also allows for partial observability. However, SAOM was designed to assess how specific network features (e.g., $k$-star triangles) give rise to an observed network. The latent network approach is not used to study the role of specific network statistics.  Rather, latent network models aim to account for broad patterns of network interdependence using a variance decomposition regression framework.\footnote{See \citet{minhas:etal:2016:arxiv} for detailed discussion. Other approaches based on generalized spatio-temporal dependence can also recover directed predicted probabilities \citet{franzese:etal:2012}.}
+
+We illustrate the P-GBME model by applying it to the bilateral investment treaties (BIT) network for each year in 1990-2012. The model substantially improves predictive accuracy relative to both conventional logit and standard GBME. As important, P-GBME extracts new information about the factors that drive treaty preferences, identifies important structural changes in the network, and highlights possible ``hidden'' agreements that are easily overlooked when latent network asymmetries are ignored.
