@@ -50,24 +50,29 @@ foldMat = matrix(
 ################################
 
 # run pgbme ###############################
-cores = 5
-cl=makeCluster(cores) ; registerDoParallel(cl)
-pgbmeResults <- foreach(
-	fold = 1:nFolds, 
-	.packages=c('lme4','magic','msm','mnormt')) %dopar% {
+if(
+	!all(
+		paste0(
+			'resultsPGBME_outPerf_fold',1:nFolds,'.rda'
+			) %in% list.files())
+	){
+	cores = 5
+	cl=makeCluster(cores) ; registerDoParallel(cl)
+	pgbmeResults <- foreach(
+		fold = 1:nFolds, 
+		.packages=c('lme4','magic','msm','mnormt')) %dopar% {
 
-	#
-	source('pgbme.R')
+		#
+		source('pgbme.R')
 
-	# add NAs to dv
-	naMat = foldMat ; naMat[naMat==fold] <- NA ;
-	naMat[naMat!=fold] <- 1 ; diag(naMat) = NA ;
-	yMiss = y * naMat
-	yMiss <- apply(mat.vect(yMiss), 1, prod)
+		# add NAs to dv
+		naMat = foldMat ; naMat[naMat==fold] <- NA ;
+		naMat[naMat!=fold] <- 1 ; diag(naMat) = NA ;
+		yMiss = y * naMat
+		yMiss <- apply(mat.vect(yMiss), 1, prod)
 
-	set.seed(6886)
-	fName <- paste0('resultsPGBME_outPerf_fold',fold,'.rda')
-	if(!fName %in% list.files()){
+		set.seed(6886)
+		fName <- paste0('resultsPGBME_outPerf_fold',fold,'.rda')
 		pgbmeEst <- pgbme(
 			y=yMiss, Xd=xDyad, Xs=xNode, Xr=xNode, 
 			k = 2, rho.calc = FALSE,
@@ -77,29 +82,34 @@ pgbmeResults <- foreach(
 		save(pgbmeEst, file=fName)
 		rm(pgbmeEst)
 	}
+	stopCluster(cl)
 }
-stopCluster(cl)
 ################################
 
 # run gbme ###############################
-cores = 5
-cl=makeCluster(cores) ; registerDoParallel(cl)
-shh<-foreach(
-	fold = 1:nFolds, 
-	.packages=c('lme4')) %dopar% {
+if(
+	!all(file.exists(
+		paste0(
+			'gbme_outPerf/fold',1:nFolds,'/OUT'
+			)))
+	){
+	cores = 5
+	cl=makeCluster(cores) ; registerDoParallel(cl)
+	shh<-foreach(
+		fold = 1:nFolds, 
+		.packages=c('lme4')) %dopar% {
 
-	#
-	source('gbme.R')
+		#
+		source('gbme.R')
 
-	#
-	naMat = foldMat ; naMat[naMat==fold] <- NA ;
-	naMat[naMat!=fold] <- 1 ; diag(naMat) = NA ;
-	yMiss = y * naMat
+		#
+		naMat = foldMat ; naMat[naMat==fold] <- NA ;
+		naMat[naMat!=fold] <- 1 ; diag(naMat) = NA ;
+		yMiss = y * naMat
 
-	#
-	setwd(paste0(path, 'gbme_outPerf/fold',fold,'/'))
-	set.seed(6886)
-	if(!'OUT' %in% list.files()){
+		#
+		setwd(paste0(path, 'gbme_outPerf/fold',fold,'/'))
+		set.seed(6886)
 		est <- gbme(
 			Y = yMiss, Xd = xDyad, Xs = xNode, 
 			fam='binomial', directed=FALSE, k = 2, 
@@ -108,8 +118,8 @@ shh<-foreach(
 			owrite=TRUE, awrite=TRUE
 			)
 	}
+	stopCluster(cl)
 }
-stopCluster(cl)
 ################################
 
 # org results, run glm, calc auc stats   ###############################
