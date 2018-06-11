@@ -7,7 +7,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 setwd('~/Research/pgbmeRepl/vignette/')
-library(sbgcop)
 ```
 
 In this document, we provide a brief a tutorial on how to use the P-GBME model detailed in ["Modeling Asymmetric Relationships from Symmetric Networks"](https://arxiv.org/abs/1711.03838). The P-GBME model can be run by first sourcing in a set of R functions that are contained in the `pgbme.R` script -- in the future, we may wrap P-GBME into its own package or incorporate it into the [AMEN framework](https://arxiv.org/abs/1611.00460): 
@@ -45,6 +44,10 @@ pn <- 1 # number of nodal covariates
 # simulate dependent variable
 yMatrix <- matrix(rbinom(n^2, 1, .3), nrow=n, ncol=n)
 diag(yMatrix) <- NA
+
+# make y symmetric (in your application, y should already be symmetric)
+yMatrix <- yMatrix + t(yMatrix)
+yMatrix[yMatrix>1] <- 1
 
 # simulate dyadic variables
 xd1 <- rmnorm(n, varcov = diag(n)) # dyad-level predictor
