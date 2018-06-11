@@ -63,13 +63,8 @@ if(
     paste0('results',c(1995,2010),'.rda') %in% list.files()
     )
   ){
-  cl <- makeCluster(2) ; registerDoParallel(cl)
-  results <- foreach(i = 1:length(pds), 
-    .packages=c(
-      'abind', 'magic', 'msm', 'lme4', 'mnormt'
-      )
-    ) %dopar% { mcmc(i) }
-  stopCluster(cl)
+  results <- lapply(1:length(pds), function(i){
+    mcmc(i) }) 
 }
 
 # pull out yhats

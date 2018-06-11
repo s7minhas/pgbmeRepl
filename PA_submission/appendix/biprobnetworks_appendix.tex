@@ -315,13 +315,13 @@ A shortcoming of the existing GBME framework is its inability to account for app
 
 In general, the level of missingness is not high. The only exception here is with the Law \& Order variable from the ICRG dataset, for this variable we had approximately 17\% of country-year observations missing from 1990 to 2012. The only true dyadic variable we include in our analysis is a calculation of the minimum distance between countries, and this variable has no missingness. Additionally, our dependent variable measuring whether or not two countries had signed a BIT by year $t$ also has no missingness. 
 
-A number of works have noted the issues that can arise when simply using listwise deletion,\footnote{See, for example, \citet{king:etal:2001}.} thus before running the P-GBME sampler we impute missingness among the covariates used in our model with a Bayesian, semi-parametric copula imputation scheme.\footnote{See \citet{hoff:2007a,hollenbach:etal:2016a} for details on this imputation scheme and how it differs from other approaches frequently utilized in political science.} We generate 1,000 imputed datasets from this imputation scheme and save the last 500 for use in the P-GBME MCMC sampler.
+A number of works have noted the issues that can arise when simply using listwise deletion,\footnote{See, for example, \citet{king:etal:2001}.} thus before running the P-GBME sampler we impute missingness among the covariates used in our model with a Bayesian, semi-parametric copula imputation scheme.\footnote{See \citet{hoff:2007a,hollenbach:etal:2016a} for details on this imputation scheme and how it differs from other approaches frequently utilized in political science.} We generate 1,000 imputed datasets from this imputation scheme and save 10 for use in the P-GBME MCMC sampler.
 
 To account for missingness within the P-GBME, at the beginning of every iteration of the MCMC for model, we draw a randomly sampled imputed dataset from the posterior of the Copula, calculate the parameters associated with the P-GBME using the imputed dataset, and repeat this process for every iteration of the sampler for the model. This approach directly incorporates imputation uncertainty into our posterior distributions of the P-GBME parameters without having to run and combine separate models. 
 
 \subsection{Estimation details}
 
-In our application we estimate the P-GBME separately for each year from 1990 to 2012 using the prior distributions and MCMC algorithm described above.  For each year, we ran the P-GBME MCMC sampler for 300,000 iterations, discarding the first 150,000 iterations as burn-in. We thinned the chain by saving only every 100$^{th}$ value. 
+In our application we estimate the P-GBME separately for each year from 1990 to 2012 using the prior distributions and MCMC algorithm described above.  For each year, we ran the P-GBME MCMC sampler for 20,000 iterations, discarding the first 10,000 iterations as burn-in. We thinned the chain by saving only every 10$^{th}$ value. 
 
 The following trace plot describes MCMC convergence for all parameters in the 2012 P-GBME model.  
 
