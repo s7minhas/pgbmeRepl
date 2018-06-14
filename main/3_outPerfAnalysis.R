@@ -50,11 +50,9 @@ foldMat = matrix(
 ################################
 
 # run pgbme ###############################
+fName <- paste0('resultsPGBME_outPerf_folds.rda')
 if(
-	!all(
-		paste0(
-			'resultsPGBME_outPerf_fold',1:nFolds,'.rda'
-			) %in% list.files())
+	!fName %in% list.files()
 	){
 	cores = 5
 	cl=makeCluster(cores) ; registerDoParallel(cl)
@@ -72,17 +70,16 @@ if(
 		yMiss <- apply(mat.vect(yMiss), 1, prod)
 
 		set.seed(6886)
-		fName <- paste0('resultsPGBME_outPerf_fold',fold,'.rda')
 		pgbmeEst <- pgbme(
 			y=yMiss, Xd=xDyad, Xs=xNode, Xr=xNode, 
 			k = 2, rho.calc = FALSE,
 			NS = 2e+4, burn = 1e+4, odens = 10,
 			xInclImpList=FALSE, seed=6886
 			)
-		save(pgbmeEst, file=fName)
-		rm(pgbmeEst)
+		return(pgbmeEst)
 	}
 	stopCluster(cl)
+	save(pgbmeResults, file=fName)
 }
 ################################
 
@@ -123,6 +120,7 @@ if(
 ################################
 
 # org results, run glm, calc auc stats   ###############################
+load(paste0(path, 'resultsPGBME_outPerf_folds.rda'))
 predList = lapply(1:nFolds, function(fold){
 
 	# read in gbme model results
@@ -132,7 +130,7 @@ predList = lapply(1:nFolds, function(fold){
 
 	# pull in pgbme results
 	source("pgbme.R")
-	load(paste0(path, 'resultsPGBME_outPerf_fold',fold,'.rda'))
+	pgbmeEst <- pgbmeResults[[fold]]
 	yhat <- calc_yhat(pgbmeEst, FALSE); rm(pgbmeEst)
 	yhat <- apply(pnorm(yhat), 1, mean)
 	yhat <- matrix(yhat, sqrt(length(yhat)), sqrt(length(yhat)))
