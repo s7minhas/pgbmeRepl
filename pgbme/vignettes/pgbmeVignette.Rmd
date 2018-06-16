@@ -21,7 +21,7 @@ In this document, we provide a brief a tutorial on how to use the P-GBME model d
 ```{r, eval=FALSE}
 # first install package using devtools
 library(devtools)
-install_github(repo='pgbmeRepl', username='s7minhas', subdir='pgbme')
+install_github('s7minhas/pgbmeRepl', subdir='pgbme')
 ```
 
 ```{r}
