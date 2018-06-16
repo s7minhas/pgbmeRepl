@@ -1,0 +1,210 @@
+---
+title: "Introduction to the Partial Observability Generalized Bilinear Mixed Effects (P-GBME) Model"
+author: "Arturas Rozenas, Shahryar Minhas, and John Ahlquist"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to the Partial Observability Generalized Bilinear Mixed Effects (P-GBME) Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this document, we provide a brief a tutorial on how to use the P-GBME model detailed in ["Modeling Asymmetric Relationships from Symmetric Networks"](https://arxiv.org/abs/1711.03838). The P-GBME model can be run by installing the package using devtools -- in the future, we may incorporate this model into the [AMEN framework](https://arxiv.org/abs/1611.00460): 
+
+```{r, eval=FALSE}
+# first install package using devtools
+library(devtools)
+install_github(repo='pgbmeRepl', username='s7minhas', subdir='pgbme')
+```
+
+```{r}
+# load package into workspace
+library(pgbme)
+```
+The main function is `pgbme` and it relies on five packages: 
+
+```{r, suppressMessages=TRUE}
+library(magic)
+library(msm)
+library(lme4)
+library(mnormt)
+library(abind)
+```
+
+## Structuring data for `pgbme`
+
+Before discussing how to run the `pgbme` function, we first focus on how best to structure the inputted data (the dependent variable, dyadic variables, and nodal variables):
+
+- `y`: n x n unweighted, symmetric matrix (where n denotes number of actors)
+- `Xd`: n x n x p array (where p denotes the number of dyadic covariates)
+- `Xs`: n x p matrix (where p denotes the number of sender covariates)
+- `Xr`: n x p matrix (where p denotes the number of receiver covariates)
+
+We construct a small example to highlight the structure of these objects below: 
+
+```{r}
+set.seed(6886)
+n <- 30 # number of actors in network
+pd <- 2 # number of dyadic covariates
+pn <- 1 # number of nodal covariates
+
+# simulate dependent variable
+yMatrix <- matrix(rbinom(n^2, 1, .3), nrow=n, ncol=n)
+diag(yMatrix) <- NA
+
+# make y symmetric (in your application, y should already be symmetric)
+yMatrix <- yMatrix + t(yMatrix)
+yMatrix[yMatrix>1] <- 1
+
+# simulate dyadic variables
+xd1 <- rmnorm(n, varcov = diag(n)) # dyad-level predictor
+diag(xd1) <- NA
+xd2 <- rmnorm(n, varcov = diag(n)) # dyad-level predictor
+diag(xd2) <- NA
+xDyadArray <- array(0, dim = c(n, n, pd))
+xDyadArray[,,1] <- xd1
+xDyadArray[,,2] <- xd2
+
+# simulate nodal variables
+xNodeMatrix <- matrix(rnorm(n), ncol=pn)
+xNodeSenderMatrix <- xNodeMatrix
+xNodeReceiverMatrix <- xNodeMatrix
+```
+
+The dependent variable is contained in the `yMatrix` object and it is a n x n matrix where a 1 would indicate that an event took place between the unit on the row and the unit on the column. Diagonals are set to `NA` to indicate that a unit cannot send event to itself:
+
+```{r}
+yMatrix[1:5,1:5]
+```
+
+The dyadic variables are contained in the `xDyadArray` object. `xDyadArray` is a n x n x p array that contains information about how dyads relate to each other. The diagonals in each slice of this array are also set to `NA`. 
+
+```{r}
+xDyadArray[1:5,1:5,]
+```
+
+Last, `xNodeMatrix` contains a matrix with one nodal covariate: 
+
+```{r}
+xNodeMatrix[1:5,,drop=FALSE]
+```
+
+For this simple example we will use the same nodal covariates to model the likelihood that an actor sends and receives a tie. Thus we create both `xNodeSenderMatrix` and `xNodeReceiverMatrix` from `xNodeMatrix`. A different set of covariates, however, could be used to distinguish between what makes an actor more likely to send and receive an event. 
+
+## Running `pgbme`
+
+After having formatted the dependent variable and covariates in the format specified above there are only a few other parameters that need to be set to use `pgbme`:
+
+- `k`: Dimension of multiplicative effect
+- `burn`: Burn-in period for MCMC
+- `NS`: Number of iterations to run MCMC after burn-in period
+- `odens`: Number of iterations between saved samples
+
+`k` is used to set the dimension of the multiplicative effects (U'V) in the P-GBME. In the application presented in the paper we set `k` equal to two. This means that the third order dependencies captured by U and V will each be of dimensions n x 2; thereby placing each unit in a two dimensional space, where actors that are more proximate to each other in that space are more likely to have an event with one another. The rest of the parameters specified above are common to Bayesian models, thus we move next to using these parameters to running the `pgbme` function:
+
+```{r}
+# set seed
+set.seed(6886)
+
+# running pgbme
+est <- pgbme(
+	y=apply(mat.vect(yMatrix), 1, prod),
+	Xd=xDyadArray,
+	Xs=xNodeSenderMatrix,
+	Xr=xNodeReceiverMatrix,
+	k=2,
+	burn=500,
+	NS=1000, 
+	odens=10
+	)
+```
+
+## Evaluating results from `pgbme`
+
+In the above, we output the estimates from the `pgbme` function to the `est` object, which is structured as a list. We can access the parameter estimates from the model in the following way: 
+
+```{r}
+head(est$est)
+```
+
+For applied scholars, the main parameters of interest here are:
+
+- `bd-1`: Parameter estimate of the effect of first dyadic variable in `xDyadArray`
+- `bd-2`: Parameter estimate of the effect of second variable in `xDyadArray`
+- `bs1`: Parameter estimate of the effect of nodal variable in `xNodeSenderMatrix` on the likelihood of an actor sending an event
+- `br1`: Parameter estimate of the effect of nodal variable in `xNodeReceiverMatrix` on the likelihood of an actor receiving an event
+
+Below we subset `est$est` to these parameters of interest:
+
+```{r}
+# extract beta parameters for exogenous covariates
+beta <- est$est[,grepl('bd|Intercept|bs|br',colnames(est$est))]
+head(beta)
+dim(beta)
+```
+
+The dimensions of the `beta` object is 50 x 5. Fifty because we ran the model for 1,000 iterations, burned the first 500 observations, and saved only every tenth iteration. The number of columns simply corresponds to the number of dyadic, sender, and receiver parameters plus an intercept term. 
+
+Conducting posterior analysis on this object proceeds similarly to any other Bayesian model. We can extract average parameter effects and credible intervals as follows (as with any other Bayesian model, users should also evaluate convergence using simple trace plots or other tools provided in packages such as `coda`): 
+
+```{r}
+# create function to summarize MCMC chain
+summChain <- function(x){
+	qLo <- quantile(x, probs=.025)
+	mu <- mean(x)
+	qHi <- quantile(x, probs=.975)
+	return( c(qLo=qLo, mu=mu, qHi=qHi) )
+}
+
+# apply function to beta object
+t( apply(beta, 2, summChain) ) 
+```
+
+Last, we also are often interested in extracting predicted values from our estimated model. To do this we can use the `calc_yhat` function. The main input this function takes is the output from running `pgbme`:
+
+```{r}
+# calculate predicted values
+yhat <- calc_yhat(est)
+
+# estimate predicted values across iterations and account for probit link
+yhat <- apply(pnorm(yhat), 1, mean)
+
+# reorganize into matrix
+yhat <- matrix(yhat, sqrt(length(yhat)), sqrt(length(yhat)))
+# set diagonals to NA
+diag(yhat) = NA
+```
+
+The result from the set of procedures above is a n x n matrix that contains the predicted probabilities for an event occurring between each dyad. After having calculated `yhat` we can proceed to conducting performance analysis as we would for any other analysis. 
+
+```{r}
+# organize data into dataframe
+predDF <- cbind(actual=c(yMatrix), predicted=c(yhat))
+
+# remove diagonal NA entries
+predDF <- na.omit(predDF)
+
+# convert to dataframe
+predDF <- data.frame(predDF)
+
+library(PRROC)
+aucROC=roc.curve(
+	predDF$predicted[predDF$actual==1], 
+	predDF$predicted[predDF$actual==0])$auc
+aucPR=pr.curve(
+	predDF$predicted[predDF$actual==1], 
+	predDF$predicted[predDF$actual==0])$auc.integral
+
+print( c(aucROC=aucROC, aucPR=aucPR) )
+```
+
+## Further discussion
+
+For further details on how to use the `pgbme` function please also view our application of this model to studying the bilateral investment treaty network. Files for this analysis can be found at [github/s7minhas/pgbmeRepl](https://github.com/s7minhas/pgbmeRepl). In these application files, we also show how to use `pgbme` to estimate a model in which there is missingness among the covariates and how to assess model performance using a cross-validation technique.

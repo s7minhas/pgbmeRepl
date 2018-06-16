@@ -1,0 +1,29 @@
+Package: pgbme
+Title: Partial Observability Generalized Bilinear Mixed Effects (PGBME) Model
+Version: 0.0.0.1
+Authors@R: c(
+	person("Arturas", "Rozenas", email = "ar199@nyu.edu", role = c("aut")),
+	person("Shahryar", "Minhas", email = "minhassh@msu.edu", role = c("aut", "cre")),
+	person("John", "Ahlquist", email = "jahlquist@ucsd.edu", role = c("aut"))
+	)
+Description: PGME can be used to model asymmetric relationships from symmetric networks. The PGBME model is built on top of the General Bilinear Mixed Effects (GBME) model developed by Hoff (2003).
+Depends:
+	R (>= 3.4.0),
+	magic (>= 1.5-6),
+	msm (>= 1.6.5),
+	lme4 (>= 1.1-13),
+	mnormt (>= 1.5-5),
+	abind (>= 1.4-5),
+	ggplot2 (>= 2.2.1)	
+Imports: 
+Suggests:
+	reshape2, 
+	tidyr,
+	sbgcop,
+    knitr,
+    rmarkdown
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+VignetteBuilder: knitr
