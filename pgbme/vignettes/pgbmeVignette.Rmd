@@ -24,19 +24,11 @@ library(devtools)
 install_github('s7minhas/pgbmeRepl', subdir='pgbme')
 ```
 
-```{r}
+```{r, suppressMessages=TRUE}
 # load package into workspace
 library(pgbme)
 ```
-The main function is `pgbme` and it relies on five packages: 
-
-```{r, suppressMessages=TRUE}
-library(magic)
-library(msm)
-library(lme4)
-library(mnormt)
-library(abind)
-```
+The main function in this package is `pgbme`. 
 
 ## Structuring data for `pgbme`
 
