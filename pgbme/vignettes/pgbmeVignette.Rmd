@@ -16,19 +16,18 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this document, we provide a brief a tutorial on how to use the P-GBME model detailed in ["Modeling Asymmetric Relationships from Symmetric Networks"](https://arxiv.org/abs/1711.03838). The P-GBME model can be run by installing the package using devtools -- in the future, we may incorporate this model into the [AMEN framework](https://arxiv.org/abs/1611.00460): 
+In this document, we provide a brief a tutorial on how to use the P-GBME model detailed in ["Modeling Asymmetric Relationships from Symmetric Networks"](https://arxiv.org/abs/1711.03838). The P-GBME package can be installed via devtools -- in the future, we may wrap P-GBME into the [AMEN framework](https://arxiv.org/abs/1611.00460): 
+
 
 ```{r, eval=FALSE}
-# first install package using devtools
 library(devtools)
-install_github('s7minhas/pgbmeRepl', subdir='pgbme')
-```
-
-```{r, suppressMessages=TRUE}
-# load package into workspace
+devtools::install_github('s7minhas/pgbmeRepl', subdir='pgbme')
 library(pgbme)
 ```
-The main function in this package is `pgbme`. 
+
+```{r, eval=TRUE, echo=FALSE}
+suppressMessages(library(pgbme))
+```
 
 ## Structuring data for `pgbme`
 
@@ -102,9 +101,6 @@ After having formatted the dependent variable and covariates in the format speci
 `k` is used to set the dimension of the multiplicative effects (U'V) in the P-GBME. In the application presented in the paper we set `k` equal to two. This means that the third order dependencies captured by U and V will each be of dimensions n x 2; thereby placing each unit in a two dimensional space, where actors that are more proximate to each other in that space are more likely to have an event with one another. The rest of the parameters specified above are common to Bayesian models, thus we move next to using these parameters to running the `pgbme` function:
 
 ```{r}
-# set seed
-set.seed(6886)
-
 # running pgbme
 est <- pgbme(
 	y=apply(mat.vect(yMatrix), 1, prod),
@@ -199,4 +195,4 @@ print( c(aucROC=aucROC, aucPR=aucPR) )
 
 ## Further discussion
 
-For further details on how to use the `pgbme` function please also view our application of this model to studying the bilateral investment treaty network. Files for this analysis can be found at [github/s7minhas/pgbmeRepl](https://github.com/s7minhas/pgbmeRepl). In these application files, we also show how to use `pgbme` to estimate a model in which there is missingness among the covariates and how to assess model performance using a cross-validation technique.
+For further details on how to use the `pgbme` package please also view our application of this model to studying the bilateral investment treaty network. Files for this analysis can be found at [github/s7minhas/pgbmeRepl](https://github.com/s7minhas/pgbmeRepl). In these application files, we also show how to use `pgbme` to estimate a model in which there is missingness among the covariates and how to assess model performance using a cross-validation technique.

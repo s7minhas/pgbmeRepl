@@ -12,7 +12,7 @@
 
 <meta name="author" content="Arturas Rozenas, Shahryar Minhas, and John Ahlquist" />
 
-<meta name="date" content="2018-06-16" />
+<meta name="date" content="2018-06-17" />
 
 <title>Introduction to the Partial Observability Generalized Bilinear Mixed Effects (P-GBME) Model</title>
 
@@ -70,24 +70,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introduction to the Partial Observability Generalized Bilinear Mixed Effects (P-GBME) Model</h1>
 <h4 class="author"><em>Arturas Rozenas, Shahryar Minhas, and John Ahlquist</em></h4>
-<h4 class="date"><em>2018-06-16</em></h4>
+<h4 class="date"><em>2018-06-17</em></h4>
 
 
 
-<p>In this document, we provide a brief a tutorial on how to use the P-GBME model detailed in <a href="https://arxiv.org/abs/1711.03838">“Modeling Asymmetric Relationships from Symmetric Networks”</a>. The P-GBME model can be run by installing the package using devtools – in the future, we may incorporate this model into the <a href="https://arxiv.org/abs/1611.00460">AMEN framework</a>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># first install package using devtools</span>
-<span class="kw">library</span>(devtools)
-<span class="kw">install_github</span>(<span class="st">'s7minhas/pgbmeRepl'</span>, <span class="dt">subdir=</span><span class="st">'pgbme'</span>)</code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># load package into workspace</span>
-<span class="kw">library</span>(pgbme)
-<span class="co">#&gt; Loading required package: magic</span>
-<span class="co">#&gt; Loading required package: abind</span>
-<span class="co">#&gt; Loading required package: msm</span>
-<span class="co">#&gt; Loading required package: lme4</span>
-<span class="co">#&gt; Loading required package: Matrix</span>
-<span class="co">#&gt; Loading required package: mnormt</span>
-<span class="co">#&gt; Loading required package: ggplot2</span></code></pre></div>
-<p>The main function in this package is <code>pgbme</code>.</p>
+<p>In this document, we provide a brief a tutorial on how to use the P-GBME model detailed in <a href="https://arxiv.org/abs/1711.03838">“Modeling Asymmetric Relationships from Symmetric Networks”</a>. The P-GBME package can be installed via devtools – in the future, we may wrap P-GBME into the <a href="https://arxiv.org/abs/1611.00460">AMEN framework</a>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(devtools)
+devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">'s7minhas/pgbmeRepl'</span>, <span class="dt">subdir=</span><span class="st">'pgbme'</span>)
+<span class="kw">library</span>(pgbme)</code></pre></div>
 <div id="structuring-data-for-pgbme" class="section level2">
 <h2>Structuring data for <code>pgbme</code></h2>
 <p>Before discussing how to run the <code>pgbme</code> function, we first focus on how best to structure the inputted data (the dependent variable, dyadic variables, and nodal variables):</p>
@@ -171,10 +161,7 @@ xNodeReceiverMatrix &lt;-<span class="st"> </span>xNodeMatrix</code></pre></div>
 <li><code>odens</code>: Number of iterations between saved samples</li>
 </ul>
 <p><code>k</code> is used to set the dimension of the multiplicative effects (U’V) in the P-GBME. In the application presented in the paper we set <code>k</code> equal to two. This means that the third order dependencies captured by U and V will each be of dimensions n x 2; thereby placing each unit in a two dimensional space, where actors that are more proximate to each other in that space are more likely to have an event with one another. The rest of the parameters specified above are common to Bayesian models, thus we move next to using these parameters to running the <code>pgbme</code> function:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># set seed</span>
-<span class="kw">set.seed</span>(<span class="dv">6886</span>)
-
-<span class="co"># running pgbme</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># running pgbme</span>
 est &lt;-<span class="st"> </span><span class="kw">pgbme</span>(
     <span class="dt">y=</span><span class="kw">apply</span>(<span class="kw">mat.vect</span>(yMatrix), <span class="dv">1</span>, prod),
     <span class="dt">Xd=</span>xDyadArray,
@@ -195,27 +182,27 @@ est &lt;-<span class="st"> </span><span class="kw">pgbme</span>(
 <h2>Evaluating results from <code>pgbme</code></h2>
 <p>In the above, we output the estimates from the <code>pgbme</code> function to the <code>est</code> object, which is structured as a list. We can access the parameter estimates from the model in the following way:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(est<span class="op">$</span>est)
-<span class="co">#&gt;             ll       bd-1        bd-2 Intercept           bs1         br1</span>
-<span class="co">#&gt; [1,] -2088.505 0.14730351 -0.19545374 0.9740468 -0.0575451635 -0.09286156</span>
-<span class="co">#&gt; [2,] -1998.685 0.04099272 -0.17328900 0.8399776  0.0926493878 -0.15153596</span>
-<span class="co">#&gt; [3,] -2056.504 0.05492944 -0.10965188 0.7045242 -0.0003231077 -0.09191274</span>
-<span class="co">#&gt; [4,] -2213.373 0.17246850 -0.09468464 0.9207866 -0.1937791806 -0.01381877</span>
-<span class="co">#&gt; [5,] -2225.103 0.07635006 -0.10085665 0.8013851 -0.1493227838 -0.15662458</span>
-<span class="co">#&gt; [6,] -2214.984 0.17024764 -0.22595967 0.7626602 -0.1239236374 -0.31823520</span>
-<span class="co">#&gt;            s2a         sab       s2b se2 rho     s2e1      s2e2      s2f1</span>
-<span class="co">#&gt; [1,] 0.2513321 -0.06674988 0.1450987   1   0 1.587159 2.6679579 0.3307115</span>
-<span class="co">#&gt; [2,] 0.2411527 -0.03706478 0.1621205   1   0 1.099322 1.4469317 0.5866758</span>
-<span class="co">#&gt; [3,] 0.3673693 -0.12735421 0.1450272   1   0 1.060293 2.0489700 0.6667267</span>
-<span class="co">#&gt; [4,] 0.5369523 -0.28423955 0.2425955   1   0 1.324585 1.5431518 0.6372224</span>
-<span class="co">#&gt; [5,] 0.3622250 -0.04762603 0.1614306   1   0 2.226472 1.5134059 0.7898239</span>
-<span class="co">#&gt; [6,] 0.3478484 -0.17433722 0.1950754   1   0 1.159019 0.9373016 2.5689240</span>
-<span class="co">#&gt;           s2f2</span>
-<span class="co">#&gt; [1,] 0.4864096</span>
-<span class="co">#&gt; [2,] 0.6474803</span>
-<span class="co">#&gt; [3,] 0.8164947</span>
-<span class="co">#&gt; [4,] 0.6185146</span>
-<span class="co">#&gt; [5,] 1.1201671</span>
-<span class="co">#&gt; [6,] 0.8025820</span></code></pre></div>
+<span class="co">#&gt;             ll        bd-1       bd-2 Intercept        bs1         br1</span>
+<span class="co">#&gt; [1,] -1965.925  0.17712412 -0.1909078 0.9028630 -0.2655823  0.11523752</span>
+<span class="co">#&gt; [2,] -1938.788 -0.04752898 -0.1779059 0.6393114 -0.3302694  0.16199713</span>
+<span class="co">#&gt; [3,] -1841.471  0.04250619 -0.1268805 0.7197045 -0.2602862  0.18484560</span>
+<span class="co">#&gt; [4,] -1961.932 -0.02777611 -0.2792294 0.8652372 -0.1650051 -0.21412647</span>
+<span class="co">#&gt; [5,] -1902.955  0.07311691 -0.1419628 0.6723770 -0.1367686 -0.04753896</span>
+<span class="co">#&gt; [6,] -1898.196 -0.12799857 -0.2357254 0.6472906 -0.2303312  0.20949745</span>
+<span class="co">#&gt;             s2a         sab        s2b se2 rho     s2e1      s2e2</span>
+<span class="co">#&gt; [1,] 0.15846509 -0.05741316 0.12793458   1   0 1.129588 0.3383517</span>
+<span class="co">#&gt; [2,] 0.10481131 -0.07271955 0.20468589   1   0 0.860502 0.3336797</span>
+<span class="co">#&gt; [3,] 0.09764466 -0.01783466 0.12623327   1   0 1.210503 0.6541223</span>
+<span class="co">#&gt; [4,] 0.36178706 -0.17897298 0.18620081   1   0 1.359549 0.4724748</span>
+<span class="co">#&gt; [5,] 0.14940635 -0.05526356 0.08221001   1   0 2.417479 0.3804811</span>
+<span class="co">#&gt; [6,] 0.10648566 -0.03091257 0.10907086   1   0 2.377103 0.4731863</span>
+<span class="co">#&gt;           s2f1      s2f2</span>
+<span class="co">#&gt; [1,] 0.6132000 1.4809758</span>
+<span class="co">#&gt; [2,] 0.5699664 1.3013999</span>
+<span class="co">#&gt; [3,] 0.3392568 0.5650447</span>
+<span class="co">#&gt; [4,] 0.2702974 0.4441487</span>
+<span class="co">#&gt; [5,] 0.2920651 0.6540620</span>
+<span class="co">#&gt; [6,] 0.3295430 1.0930032</span></code></pre></div>
 <p>For applied scholars, the main parameters of interest here are:</p>
 <ul>
 <li><code>bd-1</code>: Parameter estimate of the effect of first dyadic variable in <code>xDyadArray</code></li>
@@ -227,13 +214,13 @@ est &lt;-<span class="st"> </span><span class="kw">pgbme</span>(
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># extract beta parameters for exogenous covariates</span>
 beta &lt;-<span class="st"> </span>est<span class="op">$</span>est[,<span class="kw">grepl</span>(<span class="st">'bd|Intercept|bs|br'</span>,<span class="kw">colnames</span>(est<span class="op">$</span>est))]
 <span class="kw">head</span>(beta)
-<span class="co">#&gt;            bd-1        bd-2 Intercept           bs1         br1</span>
-<span class="co">#&gt; [1,] 0.14730351 -0.19545374 0.9740468 -0.0575451635 -0.09286156</span>
-<span class="co">#&gt; [2,] 0.04099272 -0.17328900 0.8399776  0.0926493878 -0.15153596</span>
-<span class="co">#&gt; [3,] 0.05492944 -0.10965188 0.7045242 -0.0003231077 -0.09191274</span>
-<span class="co">#&gt; [4,] 0.17246850 -0.09468464 0.9207866 -0.1937791806 -0.01381877</span>
-<span class="co">#&gt; [5,] 0.07635006 -0.10085665 0.8013851 -0.1493227838 -0.15662458</span>
-<span class="co">#&gt; [6,] 0.17024764 -0.22595967 0.7626602 -0.1239236374 -0.31823520</span>
+<span class="co">#&gt;             bd-1       bd-2 Intercept        bs1         br1</span>
+<span class="co">#&gt; [1,]  0.17712412 -0.1909078 0.9028630 -0.2655823  0.11523752</span>
+<span class="co">#&gt; [2,] -0.04752898 -0.1779059 0.6393114 -0.3302694  0.16199713</span>
+<span class="co">#&gt; [3,]  0.04250619 -0.1268805 0.7197045 -0.2602862  0.18484560</span>
+<span class="co">#&gt; [4,] -0.02777611 -0.2792294 0.8652372 -0.1650051 -0.21412647</span>
+<span class="co">#&gt; [5,]  0.07311691 -0.1419628 0.6723770 -0.1367686 -0.04753896</span>
+<span class="co">#&gt; [6,] -0.12799857 -0.2357254 0.6472906 -0.2303312  0.20949745</span>
 <span class="kw">dim</span>(beta)
 <span class="co">#&gt; [1] 50  5</span></code></pre></div>
 <p>The dimensions of the <code>beta</code> object is 50 x 5. Fifty because we ran the model for 1,000 iterations, burned the first 500 observations, and saved only every tenth iteration. The number of columns simply corresponds to the number of dyadic, sender, and receiver parameters plus an intercept term.</p>
@@ -248,12 +235,12 @@ summChain &lt;-<span class="st"> </span><span class="cf">function</span>(x){
 
 <span class="co"># apply function to beta object</span>
 <span class="kw">t</span>( <span class="kw">apply</span>(beta, <span class="dv">2</span>, summChain) ) 
-<span class="co">#&gt;              qLo.2.5%          mu  qHi.97.5%</span>
-<span class="co">#&gt; bd-1      -0.09220157  0.06259256 0.22763926</span>
-<span class="co">#&gt; bd-2      -0.26939740 -0.13583203 0.02909547</span>
-<span class="co">#&gt; Intercept  0.63679721  0.88115053 1.15002309</span>
-<span class="co">#&gt; bs1       -0.32210084 -0.07768716 0.17443687</span>
-<span class="co">#&gt; br1       -0.38064077 -0.08346270 0.30106297</span></code></pre></div>
+<span class="co">#&gt;             qLo.2.5%           mu  qHi.97.5%</span>
+<span class="co">#&gt; bd-1      -0.1137771  0.052744605 0.20207397</span>
+<span class="co">#&gt; bd-2      -0.2543206 -0.107067011 0.05899708</span>
+<span class="co">#&gt; Intercept  0.5426361  0.730152126 0.92849191</span>
+<span class="co">#&gt; bs1       -0.2836164 -0.137992121 0.10243131</span>
+<span class="co">#&gt; br1       -0.3017096  0.008515962 0.26096417</span></code></pre></div>
 <p>Last, we also are often interested in extracting predicted values from our estimated model. To do this we can use the <code>calc_yhat</code> function. The main input this function takes is the output from running <code>pgbme</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># calculate predicted values</span>
 yhat &lt;-<span class="st"> </span><span class="kw">calc_yhat</span>(est)
@@ -285,11 +272,11 @@ aucPR=<span class="kw">pr.curve</span>(
 
 <span class="kw">print</span>( <span class="kw">c</span>(<span class="dt">aucROC=</span>aucROC, <span class="dt">aucPR=</span>aucPR) )
 <span class="co">#&gt;    aucROC     aucPR </span>
-<span class="co">#&gt; 0.8016173 0.7439677</span></code></pre></div>
+<span class="co">#&gt; 0.8878118 0.8735875</span></code></pre></div>
 </div>
 <div id="further-discussion" class="section level2">
 <h2>Further discussion</h2>
-<p>For further details on how to use the <code>pgbme</code> function please also view our application of this model to studying the bilateral investment treaty network. Files for this analysis can be found at <a href="https://github.com/s7minhas/pgbmeRepl">github/s7minhas/pgbmeRepl</a>. In these application files, we also show how to use <code>pgbme</code> to estimate a model in which there is missingness among the covariates and how to assess model performance using a cross-validation technique.</p>
+<p>For further details on how to use the <code>pgbme</code> package please also view our application of this model to studying the bilateral investment treaty network. Files for this analysis can be found at <a href="https://github.com/s7minhas/pgbmeRepl">github/s7minhas/pgbmeRepl</a>. In these application files, we also show how to use <code>pgbme</code> to estimate a model in which there is missingness among the covariates and how to assess model performance using a cross-validation technique.</p>
 </div>
 
 
