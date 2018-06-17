@@ -1,31 +1,12 @@
-This repository includes the P-GBME package and replication files for “Modeling Asymmetric Relationships from Symmetric Networks.”
+This archive includes the files to replicate all analyses in “Modeling Asymmetric Relationships from Symmetric Networks,” Political Analysis.
 
-## Purpose of our approach
+## Replication Instructions
 
-Many bilateral relationships requiring mutual agreement produce observable networks that are symmetric (undirected). However, the unobserved, asymmetric (directed) network is frequently the object of scientific interest. We propose a method that probabilistically reconstructs the latent, asymmetric network from the observed, symmetric graph in a regression-based framework. We apply this model to the bilateral investment treaty network. Our approach successfully recovers the true data generating process in simulation studies, extracts new, politically relevant information about the network structure inaccessible to alternative approaches, and has superior predictive performance.
+The replication archive contains files and results to replicate the results presented in the manuscript (note that a full set of replication files are available on Github at [https://github/s7minhas/pgbmeRepl](https://github.com/s7minhas/pgbmeRepl)):
 
-## Installing P-GBME
+- main: contains the data files and scripts necessary to reproduce the results presented in the manuscript
 
-P-GBME can be installed via devtools: 
-
-```
-library(devtools)
-devtools::install_github('s7minhas/pgbmeRepl', subdir='pgbme')
-```
-
-A brief vignette is included with the package and can also be viewed [here](https://cdn.rawgit.com/s7minhas/pgbmeRepl/master/pgbme/vignettes/pgbmeVignette.html).
-
-## Replication instructions for the paper
-
-The replication archive is organized into four directories (note that these files are also available on Github at [https://github/s7minhas/pgbmeRepl](https://github.com/s7minhas/pgbmeRepl)):
-
-- main: contains the data files and scripts necessary to reproduce the main results in the paper
-- appendix: contains the data files and scripts necessary to reproduce the results in the appendix
-- pgbme: includes the pgbme package which can be installed using the `devtools` package 
-- vignette: provides a brief introduction to the P-GBME model we introduce in this paper
-- paper: includes .tex and .pdf versions of the paper
-
-#### Setup information
+#### Setup Information
 
 All of the analysis reported in the manuscript and the appendix is run on a m4.10xlarge EC2 instance. Instructions to set up the ec2 instance are shown below: 
 
@@ -86,12 +67,6 @@ The main directory contains four scripts that should be run in the following ord
 - 3_outPerfAnalysis.R: Assess performance for out-of-sample predictions for P-GBME, GBME, and a pooled probit model. Results are saved to `table1_outSamplePerf.txt` and correspond to the two right-most columns in Table 1 of the paper.
     + Original results from the authors are already included in the main directory, if those files ('resultsPGBME_outPerf_folds.rda' and the files in `gbme_outPerf/fold[1:5]/`) are deleted, then this script should take approximately one hour and thirty minutes to run. Also do not delete the gbme_outPerf directory or any of the directories labeled fold1, fold2, etc., instead just delete teh files included therein.
 
-The appendix directory contains three scripts that can be run in any order:
-
-- 1_pgbmeSig_figA1.R: Conducts simulation exercise summarized in Figure 1 of the appendix. This script takes approximately 2 hours to complete using 35 cores in parallel. Results are saved to figureA1.pdf.
-- 2_pgbmeCoef_section2.3.R: Estimates PGBME model for every year from 1990 to 2012. This script took approximately 40 minutes to complete using 23 cores in parallel. Results are saved to figureA2.png and figureA3.pdf
-- 3_pgbmeVarK_section2.4.R: Estimates PGBME models varying dimension of multiplicative effect. This script takes approximately one hour to complete and utilizes three cores in parallel. Results are saved to tableA3.txt.
-
 #### R package build notes
 
 Last, please note the version of each of the libraries that our project relies on (each library was built using R 3.4.4). 
@@ -103,5 +78,3 @@ Last, please note the version of each of the libraries that our project relies o
 |lme4: 1.1-17    |magic: 1.5-8     |magrittr: 1.5      |mnormt: 1.5-5    |
 |msm: 1.6.6      |parallel: 3.4.4  |pgbme: 0.0.0.1     |PRROC: 1.3       |
 |reshape2: 1.4.3 |sbgcop: 0.980    |tidyr: 0.8.1       |                 |
-
-If you find any errors or have any further questions, please address them to me via email at minhassh@msu.edu.

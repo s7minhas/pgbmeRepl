@@ -23,7 +23,7 @@ library(doParallel)
 library(reshape2)
 library(ggplot2)
 library(devtools)
-devtools::install('pgbme')
+devtools::install_github('s7minhas/pgbmeRepl', subdir='pgbme')
 library(pgbme)
 theme_set(theme_bw())
 
