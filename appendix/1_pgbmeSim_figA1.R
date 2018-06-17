@@ -1,9 +1,19 @@
 # workspace ###############################
 rm(list=ls())
-path <- '~/Research/pgbmeRepl/'
+path <- '/home/minhas/' # ubuntu path format for ec2
+# path <- '~/Research/pgbmeRepl/' # example path format for mac
 aPath <- paste0(path, 'appendix/')
 mPath <- paste0(path, 'main/')
 setwd(aPath)
+
+# install packages
+toInstall <- c(
+	'magic', 'msm', 'lme4', 'mnormt', 'abind', 
+	'parallel', 'reshape2', 'ggplot2', 
+	'latex2exp', 'magrittr')
+for(pkg in toInstall){
+  if(!pkg %in% installed.packages()[,1]){
+    install.packages(pkg) } }
 
 # load libraries
 library(magic)
@@ -19,7 +29,7 @@ library(latex2exp)
 library(magrittr)
 
 # helpers
-source(paste0(mPath, "pgbme.R"))
+library(pgbme)
 char = function(x){as.character(x)}
 num = function(x){as.numeric(char(x))}
 cntr <- function(x) (x - mean(c(x), na.rm = TRUE))/sd(c(x), na.rm = TRUE)
@@ -30,14 +40,15 @@ trim = function (x) { gsub("^\\s+|\\s+$", "", x) }
 if(!file.exists('pgbme_sim_results.rda')){
 	monte_carlo <- function(w){
 
-		source(paste0(mPath, "pgbme.R"))
+		library(pgbme)
 
 		# NETWORK SIMULATION
 		n  <<- 100
 		X1 <- rmnorm(n, varcov = diag(n)) # dyad-level predictor
 		X2 <- rmnorm(n, varcov = diag(n)) # dyad-level predictor
 		z <- as.matrix(rnorm(n)) # nodal predictor
-		P <- rmnorm(n, varcov = covmat(0)) # Sender-Receiver random effects
+		abSigma <- function(rho){ return(matrix(c(1, rho, rho, 1), 2, 2)) }
+		P <- rmnorm(n, varcov = abSigma(0)) # Sender-Receiver random effects
 		b <<- c(1, -1/2, 0, 1/2)
 		S <- matrix(P[,1] + b[3]*z, n, n, byrow = FALSE)
 		R <- matrix(P[,2] + b[4]*z, n, n, byrow = TRUE)
@@ -58,14 +69,14 @@ if(!file.exists('pgbme_sim_results.rda')){
 			y = y, Xd = Xd, Xs = z, Xr = z, 
 			k = 1, rho.calc = FALSE,
 			NS = 2e+4, burn = 1e+4, odens = 10, 
-			xInclImpList=FALSE, seed=6886)
+			xInclImpList=FALSE)
 		est <- est$est[,c(2:3,5:6)]
 		colnames(est)[1:2] <- c('bd.1','bd.2')
 		return(est)
 	}
 
 	# Calculate the number of cores
-	cores <- 5
+	cores <- 35
 	# Initiate cluster
 	cl <- makeCluster(cores)
 	clusterExport(cl, c("mPath","monte_carlo"))

@@ -1056,14 +1056,59 @@ body .markdown-body
 .codehilite .il{color:#009999}
 .codehilite .gc{color:#999;background-color:#EAF2F5}
 </style><title>README</title></head><body><article class="markdown-body"><p>This archive includes the files to replicate all analyses in “Modeling Asymmetric Relationships from Symmetric Networks,” Political Analysis.</p>
-<h1 id="replication-instructions">Replication Instructions<a class="headerlink" href="#replication-instructions" title="Permanent link"></a></h1>
-<p>The replication archive is organized into four directories:</p>
+<h2 id="replication-instructions">Replication Instructions<a class="headerlink" href="#replication-instructions" title="Permanent link"></a></h2>
+<p>The replication archive is organized into four directories (note that these files are also available on Github at <a href="https://github.com/s7minhas/pgbmeRepl">https://github/s7minhas/pgbmeRepl</a>):</p>
 <ul>
 <li>main: contains the data files and scripts necessary to reproduce the main results in the paper</li>
 <li>appendix: contains the data files and scripts necessary to reproduce the results in the appendix</li>
+<li>pgbme: includes the pgbme package which can be installed using the <code>devtools</code> package </li>
 <li>vignette: provides a brief introduction to the P-GBME model we introduce in this paper</li>
 <li>PA_submission: includes .tex and .pdf versions of the paper</li>
 </ul>
+<h4 id="setup-information">Setup Information<a class="headerlink" href="#setup-information" title="Permanent link"></a></h4>
+<p>All of the analysis reported in the manuscript and the appendix is run on a m4.10xlarge EC2 instance. Instructions to set up the ec2 instance are shown below: </p>
+<div class="codehilite"><pre>sudo adduser minhas # substitute your own username
+sudo add-apt-repository &#39;deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/&#39;
+sudo apt-get update
+sudo apt-get install r-base
+sudo apt-get install gdebi-core
+sudo apt-get install libapparmor1
+wget https://download2.rstudio.org/rstudio-server-1.1.442-amd64.deb
+sudo gdebi rstudio-server-1.1.442-amd64.deb
+sudo rstudio-server verify-installation
+sudo apt-get install pkg-config
+sudo apt-get install build-essential libcurl4-gnutls-dev libxml2-dev libssl-dev libnlopt-dev
+sudo apt-get install htop
+sudo apt-get install tree
+</pre></div>
+
+<p>Session information for the version of R we ran on this instance is shown below (further information on packages used in the analysis is included at the end of the README): </p>
+<div class="codehilite"><pre>&gt; sessionInfo()
+R version 3.4.4 (2018-03-15)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 16.04.3 LTS
+
+Matrix products: default
+BLAS: /usr/lib/libblas/libblas.so.3.6.0
+LAPACK: /usr/lib/lapack/liblapack.so.3.6.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base
+
+loaded via a namespace (and not attached):
+[1] compiler_3.4.4
+&gt;
+</pre></div>
+
+<h4 id="running-the-scripts">Running the scripts<a class="headerlink" href="#running-the-scripts" title="Permanent link"></a></h4>
 <p>The main directory contains four scripts that should be run in the following order (before running any of the scripts please modify the path to match your local environment, the path is specified in line 2 on each of the scripts): </p>
 <ul>
 <li>0_imputeData.R: Imputes missing data among the covariates using <code>sbgcop</code>.<ul>
@@ -1085,12 +1130,12 @@ body .markdown-body
 </ul>
 <p>The appendix directory contains three scripts that can be run in any order:</p>
 <ul>
-<li>1_pgbmeSig_figA1.R: Conducts simulation exercise summarized in Figure 1 of the appendix. This script was run on a m5.24xlarge EC2 instance and took approximately 40 minutes to complete using 90 cores in parallel. Results are saved to figureA1.pdf.</li>
-<li>2_pgbmeCoef_section2.3.R: Estimates PGBME model for every year from 1990 to 2012. This script was run on a m4.10xlarge EC2 instance and took approximately 40 minutes to complete using 23 cores in parallel. Results are saved to figureA2.png and figureA3.pdf</li>
+<li>1_pgbmeSig_figA1.R: Conducts simulation exercise summarized in Figure 1 of the appendix. This script takes approximately 2 hours to complete using 35 cores in parallel. Results are saved to figureA1.pdf.</li>
+<li>2_pgbmeCoef_section2.3.R: Estimates PGBME model for every year from 1990 to 2012. This script took approximately 40 minutes to complete using 23 cores in parallel. Results are saved to figureA2.png and figureA3.pdf</li>
 <li>3_pgbmeVarK_section2.4.R: Estimates PGBME models varying dimension of multiplicative effect. This script takes approximately one hour to complete and utilizes three cores in parallel. Results are saved to tableA3.txt.</li>
 </ul>
-<h1 id="r-and-package-build-notes">R and package build notes<a class="headerlink" href="#r-and-package-build-notes" title="Permanent link"></a></h1>
-<p>Last, please note the version of each of the libraries that our project relies on (each library was built using R 3.5.0). </p>
+<h4 id="r-package-build-notes">R package build notes<a class="headerlink" href="#r-package-build-notes" title="Permanent link"></a></h4>
+<p>Last, please note the version of each of the libraries that our project relies on (each library was built using R 3.4.4). </p>
 <table>
 <thead>
 <tr>
@@ -1102,49 +1147,41 @@ body .markdown-body
 </thead>
 <tbody>
 <tr>
-<td align="left">abind: (1.4-5)</td>
-<td align="left">foreach: (1.4.4)</td>
-<td align="left">magic: (1.5-8)</td>
-<td align="left">PRROC: (1.3)</td>
+<td align="left">abind: 1.4-5</td>
+<td align="left">devtools: 1.13.5</td>
+<td align="left">doParallel: 1.0.11</td>
+<td align="left">dplyr: 0.7.5</td>
 </tr>
 <tr>
-<td align="left">caret: (6.0-76)</td>
-<td align="left">ggplot2: (2.2.1)</td>
-<td align="left">magrittr: (1.5)</td>
-<td align="left">RColorBrewer: (1.1-2)</td>
+<td align="left">foreach: 1.4.4</td>
+<td align="left">ggplot2: 2.2.1</td>
+<td align="left">gridExtra: 2.3</td>
+<td align="left">latex2exp: 0.4.0</td>
 </tr>
 <tr>
-<td align="left">coda: (0.19-1)</td>
-<td align="left">gridExtra: (2.2.1)</td>
-<td align="left">mnormt: (1.5-5)</td>
-<td align="left">reshape2: (1.4.3)</td>
+<td align="left">lme4: 1.1-17</td>
+<td align="left">magic: 1.5-8</td>
+<td align="left">magrittr: 1.5</td>
+<td align="left">mnormt: 1.5-5</td>
 </tr>
 <tr>
-<td align="left">countrycode: (0.16)</td>
-<td align="left">igraph: (1.2.1)</td>
-<td align="left">msm: (1.6.6)</td>
-<td align="left">sbgcop: (0.975)</td>
+<td align="left">msm: 1.6.6</td>
+<td align="left">parallel: 3.4.4</td>
+<td align="left">pgbme: 0.0.0.1</td>
+<td align="left">PRROC: 1.3</td>
 </tr>
 <tr>
-<td align="left">data.table: (1.10.4)</td>
-<td align="left">latex2exp: (0.4.0)</td>
-<td align="left">OptimalCutpoints: (1.1-3)</td>
-<td align="left">tidyr: (0.8.0)</td>
-</tr>
-<tr>
-<td align="left">doParallel: (1.0.11)</td>
-<td align="left">lme4: (1.1-17)</td>
-<td align="left">parallel: (3.5.0)</td>
-<td align="left">verification: (1.42)</td>
-</tr>
-<tr>
-<td align="left">dplyr: (0.7.4)</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="left">reshape2: 1.4.3</td>
+<td align="left">sbgcop: 0.980</td>
+<td align="left">tidyr: 0.8.1</td>
 <td align="left"></td>
 </tr>
 </tbody>
 </table>
-<h1 id="using-the-model">Using the model<a class="headerlink" href="#using-the-model" title="Permanent link"></a></h1>
-<p>When using this model for your own work, the script that includes the functions you need is in the <code>main/</code> directory and is labeled <code>pgbme.R</code>. </p>
+<h4 id="using-pbgme">Using pbgme<a class="headerlink" href="#using-pbgme" title="Permanent link"></a></h4>
+<p>When using this model for your own work, see the vignette for getting started. The package can be installed via github as follows: </p>
+<div class="codehilite"><pre>library(devtools)
+devtools::install_github(&#39;s7minhas/pgbmeRepl&#39;, subdir=&#39;pgbme&#39;)
+</pre></div>
+
 <p>If you find any errors or have any further questions, please address them to me via email at <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#109;&#105;&#110;&#104;&#97;&#115;&#115;&#104;&#64;&#109;&#115;&#117;&#46;&#101;&#100;&#117;">&#109;&#105;&#110;&#104;&#97;&#115;&#115;&#104;&#64;&#109;&#115;&#117;&#46;&#101;&#100;&#117;</a>.</p></article></body></html>

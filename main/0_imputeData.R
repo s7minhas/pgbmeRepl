@@ -1,6 +1,7 @@
 # workspace ###############################
 rm(list=ls())
-path <- '~/Research/pgbmeRepl/main/'
+path <- '/home/minhas/main/' # ubuntu path format for ec2
+# path <- '~/Research/pgbmeRepl/main/' # example path format for mac
 setwd(path)
 
 # load libraries

@@ -1,6 +1,7 @@
 # workspace ###############################
 rm(list=ls())
-path <- '~/Research/pgbmeRepl/main/'
+path <- '/home/minhas/main/' # ubuntu path format for ec2
+# path <- '~/Research/pgbmeRepl/main/' # example path format for mac
 setwd(path)
 
 # load libraries
@@ -17,7 +18,7 @@ library(foreach)
 library(doParallel)
 
 # helpers
-source("pgbme.R")
+library(pgbme)
 char = function(x){as.character(x)}
 num = function(x){as.numeric(char(x))}
 cntr <- function(x) (x - mean(c(x), na.rm = TRUE))/sd(c(x), na.rm = TRUE)

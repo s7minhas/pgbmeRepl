@@ -1,9 +1,20 @@
 # workspace ###############################
 rm(list=ls())
-path <- '~/Research/pgbmeRepl/'
+path <- '/home/minhas/' # ubuntu path format for ec2
+# path <- '~/Research/pgbmeRepl/' # example path format for mac
 aPath <- paste0(path, 'appendix/')
 mPath <- paste0(path, 'main/')
 setwd(aPath)
+
+# install packages
+toInstall <- c(
+	'tidyr', 'reshape2', 'sbgcop', 'magic', 
+	'msm', 'lme4', 'mnormt', 'abind', 'foreach', 
+	'doParallel', 'ggplot2', 'dplyr', 
+	'gridExtra', 'latex2exp')
+for(pkg in toInstall){
+  if(!pkg %in% installed.packages()[,1]){
+    install.packages(pkg) } }
 
 # load libraries
 library(tidyr)
@@ -52,7 +63,7 @@ if(!all(paste0('results', pds, '.rda') %in% list.files())){
 	cores <- length(pds)
 	cl=makeCluster(cores) ; registerDoParallel(cl)
 	shhh <- foreach(t = pds, 
-		.packages = c('abind', 'magic', 'msm', 'lme4', 'mnormt')
+		.packages = c('abind', 'magic', 'msm', 'lme4', 'mnormt', 'pgbme')
 		) %dopar% {
 
 		# iterate over every imp
@@ -79,9 +90,6 @@ if(!all(paste0('results', pds, '.rda') %in% list.files())){
 			# red
 			return(list(xDyad=xDyad,xNode=xN)) })
 
-		# pull in mcmc code
-		source(paste0(mPath, "pgbme.R"))
-
 		# organize data for pgbme
 		y <- bit.acc.t[[ t ]]
 		y <- apply(mat.vect(y), 1, prod)
@@ -98,8 +106,7 @@ if(!all(paste0('results', pds, '.rda') %in% list.files())){
 			xInclImpList=TRUE, 
 			Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
 			k = 2, rho.calc = FALSE,
-			NS = 2e+4, burn = 1e+4, odens = 10,
-			seed=6886
+			NS = 2e+4, burn = 1e+4, odens = 10
 			)
 
 		# save

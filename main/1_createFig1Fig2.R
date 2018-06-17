@@ -1,7 +1,16 @@
 # workspace ###############################
 rm(list=ls())
-path <- '~/Research/pgbmeRepl/main/'
+path <- '/home/minhas/main/' # ubuntu path format for ec2
+# path <- '~/Research/pgbmeRepl/main/' # example path format for mac
 setwd(path)
+
+# install packages
+toInstall <- c(
+  'magic', 'msm', 'lme4', 'mnormt', 'abind', 
+  'foreach', 'doParallel', 'reshape2', 'ggplot2', 'devtools')
+for(pkg in toInstall){
+  if(!pkg %in% installed.packages()[,1]){
+    install.packages(pkg) } }
 
 # load libraries
 library(magic)
@@ -13,59 +22,71 @@ library(foreach)
 library(doParallel)
 library(reshape2)
 library(ggplot2)
+library(devtools)
+devtools::install('pgbme')
+library(pgbme)
 theme_set(theme_bw())
 
 # helpers
-source("pgbme.R")
 char = function(x){as.character(x)}
 num = function(x){as.numeric(char(x))}
 cntr <- function(x) (x - mean(c(x), na.rm = TRUE))/sd(c(x), na.rm = TRUE)
 trim = function (x) { gsub("^\\s+|\\s+$", "", x) }
+set.seed(6886)
 ################################
 
 # fns for p-gbme ###############################
 pds <- c(1995,2010)
 mcmc <- function(t, year=pds) {
-	# pull in mcmc code
-	source("pgbme.R")
 
-	# load data
-	load( paste0('modelData',year[t],'.rda') )
-
-	# organize data for pgbme
-	y <- bit.acc.t[[ char(year[t]) ]]
-	y <- apply(mat.vect(y), 1, prod)
-	xDyadStart = xData[[1]]$xDyad
-	xNodeStart = xData[[1]]$xNode
-	impsToDraw = 2:length(xData)
-	xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
-	xNode = lapply(xData[impsToDraw], function(x){x$xNode})
-	rm(xData)
-
+  # seed
   set.seed(6886)
-	est <- pgbme(
-		y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
-		xInclImpList=TRUE, 
-		Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
-		k = 2, rho.calc = FALSE,
-		NS = 2e+4, burn = 1e+4, odens = 10,
-		seed=6886
-		)
-	
-	# save results
-	save(est, file=paste0('results',year[t],'.rda'))
-	}
+
+  # load data
+  load( paste0('modelData',year[t],'.rda') )
+
+  # organize data for pgbme
+  y <- bit.acc.t[[ char(year[t]) ]]
+  y <- apply(mat.vect(y), 1, prod)
+  xDyadStart = xData[[1]]$xDyad
+  xNodeStart = xData[[1]]$xNode
+  impsToDraw = 2:length(xData)
+  xDyad = lapply(xData[impsToDraw], function(x){x$xDyad})
+  xNode = lapply(xData[impsToDraw], function(x){x$xNode})
+  rm(xData)
+
+  est <- pgbme(
+    y = y, Xd = xDyadStart, Xs = xNodeStart, Xr = xNodeStart, 
+    xInclImpList=TRUE, 
+    Xd_L=xDyad, Xs_L=xNode, Xr_L=xNode,
+    k = 2, rho.calc = FALSE,
+    NS = 2e+4, burn = 1e+4, odens = 10,
+    )
+  
+  # save results
+  save(est, file=paste0('results',year[t],'.rda'))
+  }
 ################################
 
 # run p-gbme ###############################
-if(
-  !all(
-    paste0('results',c(1995,2010),'.rda') %in% list.files()
-    )
-  ){
-  results <- lapply(1:length(pds), function(i){
-    mcmc(i) }) 
-}
+# if(
+#   !all(
+#     paste0('results',c(1995,2010),'.rda') %in% list.files()
+#     )
+#   ){
+  # results <- lapply(1:length(pds), function(i){
+  #   mcmc(i) }) 
+
+  cores <- 2
+  cl <- makeCluster(cores)
+  registerDoParallel(cl)
+  results <- foreach(i = 1:length(pds), 
+    .packages=c('abind', 'magic', 'msm', 'lme4', 'mnormt', 'pgbme')
+    ) %do% {
+      mcmc(i)
+    }
+  stopCluster(cl)
+# }
 
 # pull out yhats
 yhats <- lapply(pds, function(yr){
@@ -77,12 +98,12 @@ names(yhats) <- pds
 # figure 1  ###############################
 load('rawData.rda')
 chn95grey = dplotGG(
-	yhats$'1995', bit.acc.t$'1995',
-	"CHN", actual =T, countryLabel='China') +
+  yhats$'1995', bit.acc.t$'1995',
+  "CHN", actual =T, countryLabel='China') +
   scale_color_manual(values=c('#969696', '#000000'))
 chn10grey = dplotGG(
-	yhats$'2010', bit.acc.t$'2010',
-	"CHN", actual =T, countryLabel='China') +
+  yhats$'2010', bit.acc.t$'2010',
+  "CHN", actual =T, countryLabel='China') +
   scale_color_manual(values=c('#969696', '#000000'))
 ggsave(chn95grey, height=4, width=4, file='figure1_a.pdf')
 ggsave(chn10grey, height=4, width=4, file='figure1_b.pdf')
@@ -90,8 +111,8 @@ ggsave(chn10grey, height=4, width=4, file='figure1_b.pdf')
 
 # figure 2 ###############################
 # org data for usa10
-usa10 = predict.gbme(yhats$'2010', bit.acc.t$'2010',
-	TRUE, threshold=NULL) ; usa10$y = data.matrix(usa10$y)
+usa10 = orgPreds_pgbme(yhats$'2010', bit.acc.t$'2010',
+  TRUE, threshold=NULL) ; usa10$y = data.matrix(usa10$y)
 predDF = data.frame(senProb=usa10$yhat['USA',], recProb=usa10$yhat[,'USA'], 
   cntry=rownames(usa10$yhat), row.names=NULL, stringsAsFactors = FALSE)
 trueDF = data.frame(actBIT=usa10$y['USA',], cntry=rownames(usa10$y))
