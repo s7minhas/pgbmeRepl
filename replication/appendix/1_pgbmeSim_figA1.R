@@ -109,6 +109,7 @@ meanParamVal$actVal = varKey$actVal[match(meanParamVal$Var2, varKey$dirty)]
 meanParamVal$bias = meanParamVal$value - meanParamVal$actVal
 
 # viz
+set.seed(6886)
 biasPlot=ggplot(meanParamVal, aes(x=label, y=value, fill=label)) +
 	geom_jitter(alpha=.5) +		
 	geom_boxplot(outlier.alpha=.01,alpha=.7) +

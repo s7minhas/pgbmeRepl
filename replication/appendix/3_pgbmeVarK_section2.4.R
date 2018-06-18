@@ -1,7 +1,7 @@
 # workspace ###############################
 rm(list=ls())
 path <- '/home/minhas/' # ubuntu path format for ec2
-path <- '~/Research/pgbmeRepl/replication/' # example path format for mac
+# path <- '~/Research/pgbmeRepl/replication/' # example path format for mac
 aPath <- paste0(path, 'appendix/')
 mPath <- paste0(path, 'main/')
 setwd(aPath)
