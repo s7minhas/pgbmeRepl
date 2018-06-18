@@ -1,4 +1,4 @@
-This repository includes the P-GBME package and replication files for [“Modeling Asymmetric Relationships from Symmetric Networks.”](https://arxiv.org/pdf/1711.03838.pdf)
+This repository includes the P-GBME package and replication files for [“Modeling Asymmetric Relationships from Symmetric Networks”](https://arxiv.org/pdf/1711.03838.pdf).
 
 ## Purpose of our approach
 

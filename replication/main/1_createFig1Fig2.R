@@ -69,14 +69,11 @@ mcmc <- function(t, year=pds) {
 ################################
 
 # run p-gbme ###############################
-# if(
-#   !all(
-#     paste0('results',c(1995,2010),'.rda') %in% list.files()
-#     )
-#   ){
-  # results <- lapply(1:length(pds), function(i){
-  #   mcmc(i) }) 
-
+if(
+  !all(
+    paste0('results',c(1995,2010),'.rda') %in% list.files()
+    )
+  ){
   cores <- 2
   cl <- makeCluster(cores)
   registerDoParallel(cl)
@@ -86,7 +83,7 @@ mcmc <- function(t, year=pds) {
       mcmc(i)
     }
   stopCluster(cl)
-# }
+}
 
 # pull out yhats
 yhats <- lapply(pds, function(yr){

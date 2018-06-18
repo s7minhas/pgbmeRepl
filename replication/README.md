@@ -7,10 +7,10 @@ The replication archive is organized into two directories (note that these files
 
 #### Setup information
 
-All of the analysis reported in the manuscript and the appendix is run on a m4.10xlarge EC2 instance. Instructions to set up the ec2 instance are shown below: 
+All of the analysis reported in the manuscript and the appendix is run on a m4.10xlarge EC2 instance. Once the instance is active, ssh into it and run the following lines to set up the R environment and RStudio server: 
 
 ```
-sudo adduser minhas # substitute your own username
+sudo adduser minhas
 sudo add-apt-repository 'deb [arch=amd64,i386] https://cran.rstudio.com/bin/linux/ubuntu xenial/'
 sudo apt-get update
 sudo apt-get install r-base
@@ -60,17 +60,17 @@ The main directory contains four scripts that should be run in the following ord
 - 0_imputeData.R: Imputes missing data among the covariates using `sbgcop`.
     + This should take only a few minutes to run and is run in parallel across two cores.
 - 1_createFig1Fig2.R: Run `pgbme` to generate Figures 1 and 2 in the paper
-    + Original results from the authors are already included in the main directory, if those files (`results1995.rda` and `results2010.rda`) are deleted, then this script should take approximately one hour and ten minutes to run. 
+    + Original results from the authors are already included in the main directory, if those files (`results1995.rda` and `results2010.rda`) are deleted, then this script should take approximately one hour and thirty minutes to run. 
 - 2_inPerfAnalysis.R: Assess performance for in-sample predictions for P-GBME, GBME, and a pooled probit model. Results are saved to `table1_inSamplePerf.txt` and correspond to the two left-most columns in Table 1 of the paper.
-    + Original results from the authors are already included in the main directory, if those files (`resultsPGBME_inPerf.rda` and the files in `gbme_inPerf`) are deleted, then this script should take approximately one hour and twenty minutes to run. Also do not delete the gbme_inPerf directory itself, instead just delete the files included therein.
+    + Original results from the authors are already included in the main directory, if those files (`resultsPGBME_inPerf.rda` and the files in `gbme_inPerf`) are deleted, then this script should take approximately one hour and twenty minutes to run. Also do not delete the gbme_inPerf directory itself, just delete the individual files included within.
 - 3_outPerfAnalysis.R: Assess performance for out-of-sample predictions for P-GBME, GBME, and a pooled probit model. Results are saved to `table1_outSamplePerf.txt` and correspond to the two right-most columns in Table 1 of the paper.
-    + Original results from the authors are already included in the main directory, if those files ('resultsPGBME_outPerf_folds.rda' and the files in `gbme_outPerf/fold[1:5]/`) are deleted, then this script should take approximately one hour and thirty minutes to run. Also do not delete the gbme_outPerf directory or any of the directories labeled fold1, fold2, etc., instead just delete teh files included therein.
+    + Original results from the authors are already included in the main directory, if those files ('resultsPGBME_outPerf_folds.rda' and the files in `gbme_outPerf/fold[1:5]/`) are deleted, then this script should take approximately one hour and thirty minutes to run. Also do not delete the gbme_outPerf directory or any of the directories labeled fold1, fold2, etc., just delete the files included within.
 
 The appendix directory contains three scripts that can be run in any order:
 
-- 1_pgbmeSig_figA1.R: Conducts simulation exercise summarized in Figure 1 of the appendix. This script takes approximately 2 hours to complete using 35 cores in parallel. Results are saved to figureA1.pdf.
-- 2_pgbmeCoef_section2.3.R: Estimates PGBME model for every year from 1990 to 2012. This script took approximately 40 minutes to complete using 23 cores in parallel. Results are saved to figureA2.png and figureA3.pdf
-- 3_pgbmeVarK_section2.4.R: Estimates PGBME models varying dimension of multiplicative effect. This script takes approximately one hour to complete and utilizes three cores in parallel. Results are saved to tableA3.txt.
+- 1_pgbmeSig_figA1.R: Conducts simulation exercise summarized in Figure 1 of the appendix. This script takes approximately 2 hours to complete using 35 cores in parallel. Results are saved to `figureA1.pdf` and `simCoverStats_sectionA1.txt`.
+- 2_pgbmeCoef_section2.3.R: Estimates PGBME model for every year from 1990 to 2012. This script took approximately 40 minutes to complete using 23 cores in parallel. Results are saved to `figureA2.png` and `figureA3.pdf`.
+- 3_pgbmeVarK_section2.4.R: Estimates PGBME models varying dimension of multiplicative effect. This script takes approximately one hour to complete and utilizes three cores in parallel. Results are saved to `tableA3.txt`.
 
 #### R package build notes
 
