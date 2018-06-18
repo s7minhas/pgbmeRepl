@@ -725,7 +725,7 @@ calc_yhat_gbme <- function(y, xDyad, xNode, gbmePath){
   # read in model results
   OUT = read.table(paste0(gbmePath, 'OUT'), header=TRUE)
   a = read.table(paste0(gbmePath, 'A'), header=TRUE)
-  Z = read.table(paste0(gbmePath, 'z'), header=TRUE)
+  Z = read.table(paste0(gbmePath, 'Z'), header=TRUE)
 
   #convert to an array
   nss<-dim(OUT)[1]

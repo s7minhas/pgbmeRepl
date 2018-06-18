@@ -1,7 +1,7 @@
 # workspace ###############################
 rm(list=ls())
 path <- '/home/minhas/main/' # ubuntu path format for ec2
-# path <- '~/Research/pgbmeRepl/main/' # example path format for mac
+# path <- '~/Research/pgbmeRepl/replication/main/' # example path format for mac
 setwd(path)
 
 # install packages

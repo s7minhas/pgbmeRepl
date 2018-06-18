@@ -1,7 +1,7 @@
 # workspace ###############################
 rm(list=ls())
 path <- '/home/minhas/main/' # ubuntu path format for ec2
-# path <- '~/Research/pgbmeRepl/main/' # example path format for mac
+# path <- '~/Research/pgbmeRepl/replication/main/' # example path format for mac
 setwd(path)
 
 # load libraries
@@ -59,10 +59,7 @@ if(
 	cl=makeCluster(cores) ; registerDoParallel(cl)
 	pgbmeResults <- foreach(
 		fold = 1:nFolds, 
-		.packages=c('lme4','magic','msm','mnormt')) %dopar% {
-
-		#
-		source('pgbme.R')
+		.packages=c('lme4','magic','msm','mnormt', 'pgbme')) %dopar% {
 
 		# add NAs to dv
 		naMat = foldMat ; naMat[naMat==fold] <- NA ;
@@ -130,7 +127,6 @@ predList = lapply(1:nFolds, function(fold){
 		paste0(path, 'gbme_outPerf/fold',fold,'/'))
 
 	# pull in pgbme results
-	source("pgbme.R")
 	pgbmeEst <- pgbmeResults[[fold]]
 	yhat <- calc_yhat(pgbmeEst, FALSE); rm(pgbmeEst)
 	yhat <- apply(pnorm(yhat), 1, mean)
