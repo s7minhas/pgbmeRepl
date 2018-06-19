@@ -100,7 +100,7 @@ ddesign$glmProb = pnorm(glmPreds[!is.na(glmPreds)])
 # calc auc stats ###############################
 # organize preds into list
 predDfs = list(
-	GLM = cbind(ddesign[,c('y','glmProb')], model='GLM'),
+	'Pooled probit' = cbind(ddesign[,c('y','glmProb')], model='Pooled probit'),
 	GBME = cbind(ddesign[,c('y','gbmeProb')], model='GBME'),
 	'P-GBME' = cbind(ddesign[,c('y','pgbmeProb')], model='P-GBME')
 	)
@@ -111,7 +111,7 @@ aucSumm=do.call('rbind', lapply(predDfs,function(x){
 	aucROC=roc.curve(x$pred[x$actual==1], x$pred[x$actual==0])$auc
 	aucPR=pr.curve(x$pred[x$actual==1], x$pred[x$actual==0])$auc.integral
 	return( c('AUC (ROC)'=aucROC,'AUC (PR)'=aucPR) ) }) )
-aucSumm = aucSumm[order(aucSumm[,1],decreasing=TRUE),]
+aucSumm = aucSumm[order(aucSumm[,1],decreasing=FALSE),]
 aucSumm = trim(format(round(aucSumm, 2), nsmall=2))
 sink(paste0(path, 'table1_inSamplePerf.txt'))
 print(aucSumm)

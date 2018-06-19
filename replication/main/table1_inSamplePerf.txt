@@ -1,4 +1,4 @@
-       AUC (ROC) AUC (PR)
-P-GBME "0.90"    "0.71"  
-GBME   "0.76"    "0.47"  
-GLM    "0.75"    "0.48"  
+              AUC (ROC) AUC (PR)
+Pooled probit "0.75"    "0.48"  
+GBME          "0.76"    "0.47"  
+P-GBME        "0.90"    "0.71"  

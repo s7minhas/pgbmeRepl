@@ -1061,6 +1061,7 @@ body .markdown-body
 <li>main: contains the data files and scripts necessary to reproduce the main results in the paper</li>
 <li>appendix: contains the data files and scripts necessary to reproduce the results in the appendix</li>
 </ul>
+<p>Replicating the figures and tables in the main text will take 5-10 minutes on a standard laptop if the provided MCMC results are used. If the provided results are deleted, the running time for the main text figures and tables is detailed below. We recommend replicating the figures and tables in the appendix with use of an EC2 instance (setup details provided in the next section). </p>
 <h4 id="setup-information">Setup information<a class="headerlink" href="#setup-information" title="Permanent link"></a></h4>
 <p>All of the analysis reported in the manuscript and the appendix is run on a m4.10xlarge EC2 instance. Once the instance is active, ssh into it and run the following lines to set up the R environment and RStudio server: </p>
 <div class="codehilite"><pre>sudo adduser minhas
@@ -1105,7 +1106,7 @@ loaded via a namespace (and not attached):
 </pre></div>
 
 <h4 id="running-the-scripts">Running the scripts<a class="headerlink" href="#running-the-scripts" title="Permanent link"></a></h4>
-<p>The main directory contains four scripts that should be run in the following order (before running any of the scripts please modify the path to match your local environment, the path is specified in line 2 on each of the scripts): </p>
+<p>The main directory contains four scripts that should be run in the following order (before running any of the scripts please modify the path to match your local environment, the path is specified in line 3 on each of the scripts): </p>
 <ul>
 <li>0_imputeData.R: Imputes missing data among the covariates using <code>sbgcop</code>.<ul>
 <li>This should take only a few minutes to run and is run in parallel across two cores.</li>

@@ -5,6 +5,8 @@ The replication archive is organized into two directories (note that these files
 - main: contains the data files and scripts necessary to reproduce the main results in the paper
 - appendix: contains the data files and scripts necessary to reproduce the results in the appendix
 
+Replicating the figures and tables in the main text will take 5-10 minutes on a standard laptop if the provided MCMC results are used. If the provided results are deleted, the running time for the main text figures and tables is detailed below. We recommend replicating the figures and tables in the appendix with use of an EC2 instance (setup details provided in the next section). 
+
 #### Setup information
 
 All of the analysis reported in the manuscript and the appendix is run on a m4.10xlarge EC2 instance. Once the instance is active, ssh into it and run the following lines to set up the R environment and RStudio server: 
@@ -55,7 +57,7 @@ loaded via a namespace (and not attached):
 
 #### Running the scripts
 
-The main directory contains four scripts that should be run in the following order (before running any of the scripts please modify the path to match your local environment, the path is specified in line 2 on each of the scripts): 
+The main directory contains four scripts that should be run in the following order (before running any of the scripts please modify the path to match your local environment, the path is specified in line 3 on each of the scripts): 
 
 - 0_imputeData.R: Imputes missing data among the covariates using `sbgcop`.
     + This should take only a few minutes to run and is run in parallel across two cores.
