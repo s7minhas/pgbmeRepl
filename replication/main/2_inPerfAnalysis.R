@@ -4,6 +4,14 @@ path <- '/home/minhas/main/' # ubuntu path format for ec2
 # path <- '~/Research/pgbmeRepl/replication/main/' # example path format for mac
 setwd(path)
 
+# install packages
+toInstall <- c(
+  'magic', 'msm', 'lme4', 'mnormt', 'abind', 
+  'reshape2', 'dplyr', 'tidyr', 'PRROC')
+for(pkg in toInstall){
+  if(!pkg %in% installed.packages()[,1]){
+    install.packages(pkg) } }
+
 # load libraries
 library(magic)
 library(msm)
@@ -48,7 +56,7 @@ if(!'resultsPGBME_inPerf.rda' %in% list.files()){
 		y = yPGBME, Xd = xDyad, Xs = xNode, Xr = xNode, 
 		k = 2, rho.calc = FALSE,
 		NS = 2e+4, burn = 1e+4, odens = 10,
-		xInclImpList=FALSE, seed=6886
+		xInclImpList=FALSE
 		)
 	save(pgbmeEst, file=paste0(path,'resultsPGBME_inPerf.rda'))
 }
