@@ -4,6 +4,14 @@ path <- '/home/minhas/main/' # ubuntu path format for ec2
 # path <- '~/Research/pgbmeRepl/replication/main/' # example path format for mac
 setwd(path)
 
+# install packages
+toInstall <- c(
+  'tidyr', 'reshape2', 'sbgcop', 'doParallel', 'foreach'
+  )
+for(pkg in toInstall){
+  if(!pkg %in% installed.packages()[,1]){
+    install.packages(pkg) } }
+
 # load libraries
 library(tidyr)
 library(reshape2)
