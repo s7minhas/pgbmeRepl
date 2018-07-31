@@ -14,3 +14,7 @@ devtools::install_github('s7minhas/pgbmeRepl', subdir='pgbme')
 ```
 
 A brief vignette is included with the package and can also be viewed [here](https://cdn.rawgit.com/s7minhas/pgbmeRepl/master/pgbme/vignettes/pgbmeVignette.html).
+
+Publication Outlet
+---
+Forthcoming in Political Analysis
