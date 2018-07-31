@@ -4,6 +4,8 @@ Authors
 ---
 [Arturas Rozenas](https://sites.google.com/site/arturasro/), [Shahryar Minhas](http://s7minhas.com/), & [John Ahlquist](http://johnahlquist.net/)
 
+## Repository Materials
+
 This repository includes the P-GBME package and replication files for [“Modeling Asymmetric Relationships from Symmetric Networks”](https://arxiv.org/pdf/1711.03838.pdf).
 
 ## Abstract
