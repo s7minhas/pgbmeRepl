@@ -1,4 +1,4 @@
-# A New Approach to Analyzing Coevolving Longitudinal Networks in International Relations
+# Modeling Asymmetric Relationships from Symmetric Networks
 
 Authors
 ---
