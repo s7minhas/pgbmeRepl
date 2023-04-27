@@ -86,7 +86,7 @@ pgbme <-function(
     cat("Using MLE to calculate starting values", '\n')
     options(warn=-1)    
     mle  <- glmer(c(Y) ~ X + (1|s) + (1|r), 
-      family=binomial(link=probit), nAGQ=0,
+      family=binomial(link='probit'), nAGQ=0,
       control=glmerControl( optimizer = "nloptwrap" ) )    
     startv$beta.d <- fixef(mle)[-1]
     startv$beta.u <- c(fixef(mle)[1], rep(0, rs+rr))
@@ -158,7 +158,7 @@ pgbme <-function(
     paste("s2f", 1:k,sep="")
   )
   
-  # yhat   <- matrix(NA, ncol = (NS-burn)/odens, nrow = n^2)
+  yhat   <- matrix(NA, ncol = (NS-burn)/odens, nrow = n^2)
   mcmc.samp <- matrix(NA, nrow = (NS-burn)/odens, ncol = length(cnames))
   mcmc.e <- array(NA, dim = c(n, k, (NS-burn)/odens))
   mcmc.f <- array(NA, dim = c(n, k, (NS-burn)/odens))
@@ -167,6 +167,11 @@ pgbme <-function(
   mcmc.xd <- rep(NA, (NS-burn)/odens) ; samp <- 1
   nst  <- 1
   
+  # saving latent space measurements
+  uList = list()
+  vList = list()
+  latSpaceCntr = 1
+
   main.time <- proc.time()
 
   ##### The Markov chain Monte Carlo algorithm
@@ -293,7 +298,7 @@ pgbme <-function(
       out <- c(lpy.th, beta.d, beta.u, 
         Sab[1,1], Sab[1,2], Sab[2,2], se, rho, s2e[0:k], s2f[0:k])
       
-      # yhat[, nst] <- c(theta - E)
+      yhat[, nst] <- c(theta - E)
       mcmc.samp[nst, ] <- t(out)
       mcmc.e[, , nst] <- e
       mcmc.f[, , nst] <- f
@@ -301,7 +306,10 @@ pgbme <-function(
       mcmc.r[nst, ] <- r
       mcmc.xd[nst] <- samp
       nst         <- nst + 1
-  
+      uList[[latSpaceCntr]] <- u
+      vList[[latSpaceCntr]] <- v
+      latSpaceCntr <- latSpaceCntr + 1
+
     } # end of output function
     
     if (ns==1){
@@ -323,8 +331,9 @@ pgbme <-function(
   colnames(mcmc.samp) <- cnames
   mcmc.samp <- list(
     est = mcmc.samp, Xd = Xd, s = mcmc.s, r = mcmc.r, 
-    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd
-    # , yhat=yhat
+    e = mcmc.e, f = mcmc.f, Xd_L=Xd_L, xdId=mcmc.xd,
+    uList = uList, vList = vList
+    , yhat=yhat
     )
   class(mcmc.samp) <- "gbme"
   return(mcmc.samp)
